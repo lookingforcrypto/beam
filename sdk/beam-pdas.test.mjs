@@ -1,0 +1,160 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { PROGRAM_ID, buildCreate, buildCreateV2, buildBuy, buildSell } from './beam-native.mjs';
+import {
+  SYSTEM_PROGRAM_ID, TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID,
+  METADATA_PROGRAM_ID, MAYHEM_PROGRAM_ID,
+  sha256, isOnCurve, createProgramAddress, findProgramAddress, getAssociatedTokenAddress,
+  deriveGlobal, deriveMintAuthority, deriveEventAuthority, deriveGlobalVolumeAccumulator,
+  deriveBondingCurve, deriveCreatorVault, deriveUserVolumeAccumulator, deriveMetadata,
+  deriveMayhemGlobalParams, deriveMayhemSolVault, deriveMayhemState,
+  resolveCreateAccounts, resolveCreateV2Accounts, resolveLegacyBuyAccounts, resolveLegacySellAccounts,
+} from './beam-pdas.mjs';
+
+const fixtureBytes = readFileSync(new URL('./fixtures/pdas.json', import.meta.url));
+const fixture = JSON.parse(fixtureBytes);
+const receipt = JSON.parse(readFileSync(new URL('./fixtures/pdas.receipt.json', import.meta.url)));
+const fromHex = (value) => Uint8Array.from(Buffer.from(value, 'hex'));
+const { mint, user, creator } = fixture.inputs;
+const expectedPda = Object.fromEntries(fixture.pdas.map((p) => [p.name, p]));
+const expectedAta = Object.fromEntries(fixture.associatedTokenAccounts.map((a) => [a.name, a.address]));
+// Synthetic placeholders for accounts this module deliberately leaves unresolved.
+const SYNTHETIC = {
+  feeRecipient: '4vJ9JU1bJJE96FWSJKvHsmmFADCg4gpZQff4P3bkLKi',
+  feeConfig: '8qbHbw2BbbTHBW1sbeqakYXVKRQM8Ne7pLK7m6CVfeR',
+  feeProgram: 'CktRuQ2mttgRGkXJtyksdKHjUdc2C4TgDzyB98oEzy8',
+  mayhemTokenVault: 'GgBaCs3NCBuZN12kCJgAW63ydqohFkHEdfdEXBPzLHq',
+};
+
+test('fixture bytes match the recorded Rust producer receipt', () => {
+  assert.equal(createHash('sha256').update(fixtureBytes).digest('hex'), receipt.stdoutSha256);
+  assert.equal(fixtureBytes.length, receipt.stdoutBytes);
+  const source = readFileSync(new URL('./tools/generate-pda-fixtures.rs', import.meta.url));
+  assert.equal(createHash('sha256').update(source).digest('hex'), receipt.sourceSha256);
+});
+
+test('program IDs match the constants compiled into beam-program', () => {
+  assert.deepEqual(fixture.programIds, {
+    beam: PROGRAM_ID, mayhem: MAYHEM_PROGRAM_ID, metadata: METADATA_PROGRAM_ID,
+    token: TOKEN_PROGRAM_ID, token2022: TOKEN_2022_PROGRAM_ID,
+    associatedToken: ASSOCIATED_TOKEN_PROGRAM_ID, system: SYSTEM_PROGRAM_ID,
+  });
+});
+
+test('sha256 matches node:crypto across padding boundaries', () => {
+  for (const length of [0, 1, 31, 32, 55, 56, 57, 63, 64, 65, 119, 120, 128, 1000]) {
+    const input = Uint8Array.from({ length }, (_, i) => (i * 131 + length) & 255);
+    assert.equal(Buffer.from(sha256(input)).toString('hex'), createHash('sha256').update(input).digest('hex'), `length ${length}`);
+  }
+  assert.throws(() => sha256('text'), TypeError);
+});
+
+test('curve membership matches curve25519-dalek decompression', () => {
+  assert.ok(fixture.curvePoints.length >= 100);
+  assert.ok(fixture.curvePoints.some((p) => p.onCurve) && fixture.curvePoints.some((p) => !p.onCurve));
+  for (const point of fixture.curvePoints) {
+    assert.equal(isOnCurve(fromHex(point.hex)), point.onCurve, point.hex);
+  }
+  assert.throws(() => isOnCurve(new Uint8Array(31)), TypeError);
+});
+
+test('raw seed derivation reproduces every Rust find_program_address result', () => {
+  for (const pda of fixture.pdas) {
+    const seeds = pda.seedsHex.map(fromHex);
+    assert.deepEqual(findProgramAddress(seeds, pda.programId), { address: pda.address, bump: pda.bump }, pda.name);
+    assert.equal(createProgramAddress([...seeds, Uint8Array.of(pda.bump)], pda.programId), pda.address);
+  }
+  assert.ok(fixture.pdas.some((p) => p.bump < 255), 'fixture exercises skipped on-curve bumps');
+});
+
+test('named Beam and Mayhem derivations match Anchor seeds', () => {
+  const cases = {
+    global: deriveGlobal(), mintAuthority: deriveMintAuthority(),
+    eventAuthority: deriveEventAuthority(), globalVolumeAccumulator: deriveGlobalVolumeAccumulator(),
+    bondingCurve: deriveBondingCurve(mint), creatorVault: deriveCreatorVault(creator),
+    userVolumeAccumulator: deriveUserVolumeAccumulator(user), metadata: deriveMetadata(mint),
+    mayhemGlobalParams: deriveMayhemGlobalParams(), mayhemSolVault: deriveMayhemSolVault(),
+    mayhemState: deriveMayhemState(mint),
+  };
+  assert.deepEqual(Object.keys(cases).sort(), Object.keys(expectedPda).sort());
+  for (const [name, actual] of Object.entries(cases)) {
+    assert.deepEqual(actual, { address: expectedPda[name].address, bump: expectedPda[name].bump }, name);
+  }
+});
+
+test('associated token addresses match spl-associated-token-account', () => {
+  for (const ata of fixture.associatedTokenAccounts) {
+    assert.equal(getAssociatedTokenAddress(ata), ata.address, ata.name);
+  }
+  assert.throws(() => getAssociatedTokenAddress({ owner: user, mint, tokenProgram: SYSTEM_PROGRAM_ID }), /SPL Token or Token-2022/);
+});
+
+test('seed limits mirror Solana and reject malformed input', () => {
+  const seed = new Uint8Array(32);
+  assert.throws(() => findProgramAddress([new Uint8Array(33)], PROGRAM_ID), /at most 32 bytes/);
+  assert.throws(() => createProgramAddress(Array(17).fill(seed), PROGRAM_ID), /at most 16 seeds/);
+  assert.doesNotThrow(() => createProgramAddress(Array(16).fill(new Uint8Array(1)), PROGRAM_ID));
+  assert.throws(() => findProgramAddress(Array(16).fill(seed), PROGRAM_ID), /room for a bump/);
+  assert.throws(() => findProgramAddress(['global'], PROGRAM_ID), TypeError);
+  assert.throws(() => findProgramAddress([seed], 'not-a-key'), RangeError);
+  assert.throws(() => deriveBondingCurve('0OIl'), /mint/);
+  const onCurveBump = fixture.pdas.find((p) => p.bump < 255);
+  assert.throws(
+    () => createProgramAddress([...onCurveBump.seedsHex.map(fromHex), Uint8Array.of(255)], onCurveBump.programId),
+    /on-curve/,
+  );
+});
+
+test('resolved Create and CreateV2 accounts feed the existing builders', () => {
+  const create = resolveCreateAccounts({ mint, user });
+  assert.equal(create.bondingCurve, expectedPda.bondingCurve.address);
+  assert.equal(create.associatedBondingCurve, expectedAta.bondingCurveToken);
+  assert.equal(create.metadata, expectedPda.metadata.address);
+  assert.equal(create.mintAuthority, expectedPda.mintAuthority.address);
+  const args = { name: 'Beam', symbol: 'BEAM', uri: 'https://example.invalid/beam.json', creator };
+  const ix = buildCreate(create, args);
+  assert.equal(ix.keys.length, 14);
+  assert.deepEqual(ix.keys.filter((k) => k.isSigner).map((k) => k.pubkey), [mint, user]);
+
+  const createV2 = resolveCreateV2Accounts({ mint, user, mayhemTokenVault: SYNTHETIC.mayhemTokenVault });
+  assert.equal(createV2.tokenProgram, TOKEN_2022_PROGRAM_ID);
+  assert.equal(createV2.associatedBondingCurve, expectedAta.bondingCurveToken2022);
+  assert.equal(createV2.mayhemState, expectedPda.mayhemState.address);
+  assert.equal(createV2.globalParams, expectedPda.mayhemGlobalParams.address);
+  assert.equal(createV2.solVault, expectedPda.mayhemSolVault.address);
+  const v2 = buildCreateV2(createV2, {
+    ...args, isMayhemMode: false, isCashbackEnabled: false, creatorFeeBps: 0, isHolderReward: false,
+  });
+  assert.equal(v2.keys.length, 16);
+  assert.throws(() => resolveCreateV2Accounts({ mint, user }), /mayhemTokenVault/);
+});
+
+test('resolved legacy trade accounts keep unresolved fee accounts explicit', () => {
+  for (const [resolve, build, args, length] of [
+    [resolveLegacyBuyAccounts, buildBuy, { amount: 1, maxSolCost: 2, trackVolume: false, partialFill: false }, 16],
+    [resolveLegacySellAccounts, buildSell, { amount: 1, minSolOutput: 0 }, 14],
+  ]) {
+    for (const [tokenProgram, ataName] of [[TOKEN_PROGRAM_ID, 'Token'], [TOKEN_2022_PROGRAM_ID, 'Token2022']]) {
+      const accounts = resolve({ mint, user, creator, tokenProgram, ...SYNTHETIC });
+      assert.equal(accounts.associatedBondingCurve, expectedAta[`bondingCurve${ataName}`]);
+      assert.equal(accounts.associatedUser, expectedAta[`user${ataName}`]);
+      assert.equal(accounts.creatorVault, expectedPda.creatorVault.address);
+      assert.equal(accounts.feeConfig, SYNTHETIC.feeConfig);
+      assert.equal(build(accounts, args).keys.length, length);
+    }
+    for (const missing of ['feeRecipient', 'feeConfig', 'feeProgram']) {
+      const input = { mint, user, creator, tokenProgram: TOKEN_PROGRAM_ID, ...SYNTHETIC };
+      delete input[missing];
+      assert.throws(() => resolve(input), new RegExp(`${missing} is unresolved`));
+    }
+    assert.throws(() => resolve({ mint, user, tokenProgram: TOKEN_PROGRAM_ID, ...SYNTHETIC }), /creator/);
+    assert.throws(() => resolve({ mint, user, creator, tokenProgram: PROGRAM_ID, ...SYNTHETIC }), /SPL Token or Token-2022/);
+    const override = resolve({ mint, user, creator, tokenProgram: TOKEN_PROGRAM_ID, ...SYNTHETIC, associatedUser: SYNTHETIC.feeRecipient });
+    assert.equal(override.associatedUser, SYNTHETIC.feeRecipient);
+  }
+  const buy = resolveLegacyBuyAccounts({ mint, user, creator, tokenProgram: TOKEN_PROGRAM_ID, ...SYNTHETIC });
+  assert.equal(buy.userVolumeAccumulator, expectedPda.userVolumeAccumulator.address);
+  assert.equal(buy.globalVolumeAccumulator, expectedPda.globalVolumeAccumulator.address);
+});

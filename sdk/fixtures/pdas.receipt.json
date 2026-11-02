@@ -1,0 +1,14 @@
+{
+  "kind": "Host-only execution of the reviewed PDA fixture producer linked to the locked beam-program crate",
+  "exitCode": 0,
+  "head": "c707f3022f947572b20f730ccae11a8ccb8da52a",
+  "sourcePath": "sdk/tools/generate-pda-fixtures.rs",
+  "sourceSha256": "cb9fa8de457386ad4bb893c64334fea255ba9bd04e3128fb5332feec74b5d5d6",
+  "stdoutPath": "sdk/fixtures/pdas.json",
+  "stdoutSha256": "d1611e132f16ce50f581fba77616fc7983bbe602232979d89978efeaca73c13a",
+  "stdoutBytes": 14062,
+  "noHandlersOrNetworkOrTransactions": true,
+  "cargo": "1.97.0",
+  "rustc": "1.97.0",
+  "command": "cp sdk/tools/generate-pda-fixtures.rs programs/beam/examples/beam_pda_fixture.rs && cargo run --locked --manifest-path programs/beam/Cargo.toml --example beam_pda_fixture; rm -r programs/beam/examples"
+}
