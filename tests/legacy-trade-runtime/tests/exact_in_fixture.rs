@@ -76,7 +76,7 @@ async fn print_exact_quote_in_observations() {
     // (input, min_tokens_out, partial). min_tokens_out = 1 accepts any positive
     // fill; u64::MAX forces the slippage check; 0 hits the zero-limit check.
     let mut grid: Vec<(u64, u64, bool)> = vec![
-        (0, 1, false), (1, 1, false), (2, 1, false), (80, 1, false), (81, 1, false), (102, 1, false),
+        (0, 0, false), (0, 1, false), (1, 1, false), (2, 1, false), (80, 1, false), (81, 1, false), (102, 1, false),
         (1_000_000_007, 0, false), (1_000_000_007, u64::MAX, false),
     ];
     for input in [1_000_000_007u64, 1_000_000_014, 101, 10_125, 123_456_789, 999_999_999, 5_000_000_001, 33_333_333_333] {
