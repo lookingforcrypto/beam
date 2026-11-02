@@ -5,6 +5,7 @@ import { readFileSync } from 'node:fs';
 import {
   QuoteError, buyQuote, sellQuote, tokensForQuote, fee, tradeFees,
   previewLegacyBuy, previewLegacySell, maxSolCostWithSlippage, minSolOutputWithSlippage,
+  previewBuyExactQuoteInV2,
 } from './beam-quote.mjs';
 
 const fixtureBytes = readFileSync(new URL('./fixtures/quote.json', import.meta.url));
@@ -123,4 +124,60 @@ test('inputs are strict integers', () => {
   assert.equal(buyQuote({ ...launch, virtualTokenReserves: '1073000000000000' }, 1_000_000_000), buyQuote(launch, 1_000_000_000));
   assert.throws(() => buyQuote({ ...launch, virtualTokenReserves: -1n }, 1), /virtualTokenReserves/);
   assert.throws(() => buyQuote(null, 1), TypeError);
+});
+
+const exactInBytes = readFileSync(new URL('./fixtures/quote-exact-in.json', import.meta.url));
+const exactIn = JSON.parse(exactInBytes);
+const exactInReceipt = JSON.parse(readFileSync(new URL('./fixtures/quote-exact-in.receipt.json', import.meta.url)));
+
+test('exact-quote-in fixture bytes match the recorded runtime receipt', () => {
+  assert.equal(createHash('sha256').update(exactInBytes).digest('hex'), exactInReceipt.stdoutSha256);
+  assert.equal(exactInBytes.length, exactInReceipt.stdoutBytes);
+});
+
+test('buy_exact_quote_in_v2 preview matches every executed handler observation', () => {
+  const fees = { protocolFeeBps: exactIn.protocolFeeBps, creatorFeeBps: exactIn.creatorFeeBps, creatorFeeConfigurable: exactIn.creatorFeeConfigurable };
+  let ok = 0;
+  let failed = 0;
+  for (const o of exactIn.observations) {
+    const curve = { ...curveOf(o.curve, { complete: o.curve.complete }), creator: exactIn.creator, creatorFeeBps: 0n };
+    const run = () => previewBuyExactQuoteInV2({
+      curve, spendableQuoteIn: o.spendableQuoteIn, minTokensOut: o.minTokensOut, partialFill: o.partialFill, ...fees,
+    });
+    const label = `${o.spendableQuoteIn} / min ${o.minTokensOut} / partial ${o.partialFill}`;
+    if (o.error) {
+      assert.throws(run, (e) => e instanceof QuoteError && e.code === o.error, label);
+      failed++;
+    } else {
+      const p = run();
+      assert.deepEqual(
+        { tokenAmount: p.tokenAmount, quote: p.quote, protocolFee: p.protocolFee, creatorFee: p.creatorFee },
+        Object.fromEntries(Object.entries(o.result).map(([k, v]) => [k, BigInt(v)])),
+        label,
+      );
+      assert.ok(p.totalCost <= BigInt(o.spendableQuoteIn), `${label}: never spends more than the input`);
+      ok++;
+    }
+  }
+  assert.ok(ok >= 10 && failed >= 5, 'fixture covers fills and failures');
+  assert.ok(exactIn.observations.some((o) => o.partialFill && o.result), 'fixture covers a partial fill');
+});
+
+test('exact-quote-in preview invariants hold off the fixture grid', () => {
+  const fees = { protocolFeeBps: 95, creatorFeeBps: 30, creatorFeeConfigurable: false };
+  for (let i = 0n; i < 2_000n; i++) {
+    const input = 1_000_000n + i * 7_919n;
+    const p = previewBuyExactQuoteInV2({ curve: launch, spendableQuoteIn: input, minTokensOut: 1, partialFill: false, ...fees });
+    assert.ok(p.totalCost <= input && input - p.totalCost <= 1n, `${input}: spends the input, within one lamport`);
+    assert.equal(p.tokenAmount, tokensForQuote(launch, p.quote));
+    const raw = (input * 10_000n) / 10_125n;
+    assert.equal(p.protocolFee, fee(raw, 95), 'fees stay on the untrimmed quote');
+  }
+  const exempt = previewBuyExactQuoteInV2({ curve: launch, spendableQuoteIn: 1_000_000_000, minTokensOut: 1, partialFill: false, feeExempt: true });
+  assert.equal(exempt.quote, 1_000_000_000n);
+  assert.equal(exempt.totalCost, 1_000_000_000n);
+  const noCreator = previewBuyExactQuoteInV2({ curve: { ...launch, creator: ZERO }, spendableQuoteIn: 1_000_000_000, minTokensOut: 1, partialFill: false, ...fees });
+  assert.equal(noCreator.creatorFee, 0n);
+  assert.equal(noCreator.quote, (1_000_000_000n * 10_000n) / 10_095n);
+  assert.throws(() => previewBuyExactQuoteInV2({ curve: launch, spendableQuoteIn: 1, minTokensOut: 1, partialFill: false }), TypeError, 'bps are never defaulted');
 });

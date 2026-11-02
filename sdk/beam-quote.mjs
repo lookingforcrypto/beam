@@ -148,6 +148,78 @@ export function previewLegacySell(input) {
   return { tokenAmount: tokens, grossOutput, ...fees, netOutput };
 }
 
+// Follows the native-SOL path of `buy_exact_quote_in_handler`
+// (programs/beam/src/buy_v2.rs): spend at most `spendableQuoteIn` lamports.
+// The quote is grossed down by the effective protocol + creator bps, both
+// ceiling fees are charged on that untrimmed quote, and the quote is trimmed
+// if rounding pushes the total over the input. With `partialFill`, a fill
+// beyond the real reserves is clamped and re-quoted with `buyQuote`.
+// `feeExempt: true` models the whitelist-PDA path. Token-2022 quote transfer
+// fees and non-SOL quote mints are not modelled.
+export function previewBuyExactQuoteInV2(input) {
+  const { curve, spendableQuoteIn, minTokensOut, partialFill } = input;
+  liveCurve(curve);
+  const { realTokenReserves } = reserves(curve);
+  const limit = u64(minTokensOut, 'minTokensOut');
+  const available = u64(spendableQuoteIn, 'spendableQuoteIn');
+  const partial = bool(partialFill, 'partialFill');
+  if (limit === 0n) throw new QuoteError('BuyZeroAmount');
+  if (available === 0n) throw new QuoteError('BuyNotEnoughSolToCoverFees');
+
+  let protocolBps = 0n;
+  let creatorBps = 0n;
+  let quote;
+  let protocolFee = 0n;
+  let creatorFee = 0n;
+  let computed;
+  const hasCreator = curve.creator !== ZERO_PUBKEY;
+  if (input.feeExempt === true) {
+    quote = available;
+    computed = toU64(tokensForQuote(curve, available));
+  } else {
+    if (input.feeExempt !== undefined && input.feeExempt !== false) throw new TypeError('feeExempt must be boolean');
+    ({ protocolFeeBps: protocolBps, creatorFeeBps: creatorBps } = tradeFees({ ...input, quoteAmount: available }));
+    const totalBps = protocolBps + (hasCreator ? creatorBps : 0n);
+    const raw = totalBps === 0n ? available : toU64((available * BPS) / (BPS + totalBps));
+    if (raw === 0n) throw new QuoteError('BuyNotEnoughSolToCoverFees');
+    protocolFee = fee(raw, protocolBps);
+    creatorFee = hasCreator ? fee(raw, creatorBps) : 0n;
+    const total = raw + protocolFee + creatorFee;
+    quote = raw;
+    if (total > available) {
+      quote = raw - (total - available);
+      if (quote < 0n) throw new QuoteError('Overflow');
+      if (quote === 0n) throw new QuoteError('BuySlippageBelowMinTokensOut');
+    }
+    computed = toU64(tokensForQuote(curve, quote));
+  }
+
+  let tokenAmount;
+  if (computed > realTokenReserves && partial) {
+    tokenAmount = realTokenReserves;
+    quote = toU64(buyQuote(curve, tokenAmount));
+    protocolFee = fee(quote, protocolBps);
+    creatorFee = hasCreator ? fee(quote, creatorBps) : 0n;
+    if (available < quote + protocolFee + creatorFee) throw new QuoteError('TooMuchSolRequired');
+  } else {
+    tokenAmount = computed;
+    const total = quote + protocolFee + creatorFee;
+    if (total > U64_MAX) throw new QuoteError('Overflow');
+    if (total > available) {
+      quote -= total - available;
+      if (quote < 0n) throw new QuoteError('BuyNotEnoughSolToCoverFees');
+      if (quote === 0n) throw new QuoteError('BuySlippageBelowMinTokensOut');
+      tokenAmount = toU64(tokensForQuote(curve, quote));
+    }
+    if (tokenAmount < limit) throw new QuoteError('BuySlippageBelowMinTokensOut');
+  }
+  if (realTokenReserves < tokenAmount) throw new QuoteError('NotEnoughTokensToBuy');
+  return {
+    tokenAmount, quote, protocolFee, creatorFee, totalCost: quote + protocolFee + creatorFee,
+    protocolFeeBps: protocolBps, creatorFeeBps: creatorBps,
+  };
+}
+
 // Slippage bounds for the instruction arguments. Rounding always favors the
 // trader's protection: max cost rounds up, min output rounds down.
 export function maxSolCostWithSlippage(totalCost, slippageBps) {

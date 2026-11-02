@@ -24,11 +24,13 @@ canonical decimal string that fits u64. `curve` is the object returned by
 | `tradeFees({...})` | the local part of `trade_fees` / `get_fees` | Protocol and creator fees once the bps are known. |
 | `previewLegacyBuy({...})` | legacy `buy` handler order | `tokenAmount`, `solCost`, fees and `totalCost`. |
 | `previewLegacySell({...})` | legacy `sell` handler order | `tokenAmount`, `grossOutput`, fees and `netOutput`. |
+| `previewBuyExactQuoteInV2({...})` | native path of `buy_exact_quote_in_v2` | Spend at most `spendableQuoteIn`: `tokenAmount`, `quote`, fees and `totalCost`. |
 | `maxSolCostWithSlippage`, `minSolOutputWithSlippage` | not program code | Instruction bounds, rounded in the trader's favour. |
 
 Failures throw `QuoteError`. Its `code` is the program's `PumpError` variant:
 `Overflow`, `DivisionByZero`, `Truncation`, `BondingCurveComplete`,
-`BuyZeroAmount`, `NotEnoughTokensToBuy` or `SellZeroAmount`.
+`BuyZeroAmount`, `NotEnoughTokensToBuy`, `SellZeroAmount`,
+`BuyNotEnoughSolToCoverFees` or `BuySlippageBelowMinTokensOut`.
 
 The preview functions apply checks in the order the handlers use:
 
@@ -37,6 +39,23 @@ The preview functions apply checks in the order the handlers use:
   u64, then fees on that cost.
 - **Sell:** completion check, then the zero check, then `sell_quote` as u64,
   then fees subtracted from the gross output.
+
+- **Exact SOL in (`buy_exact_quote_in_v2`, native SOL).** The steps are:
+  1. `minTokensOut > 0`, then `spendableQuoteIn > 0`.
+  2. `raw = input · 10 000 / (10 000 + protocol bps + creator bps)`. The
+     creator bps count only when the curve has a creator.
+  3. Both ceiling fees are charged on `raw`.
+  4. The quote is trimmed when rounding pushes `raw + fees` over the input.
+  5. Tokens are `tokensForQuote(quote)`. With partial fill, a fill beyond the
+     real reserves is clamped and re-quoted with `buyQuote`.
+  6. `minTokensOut` is enforced.
+
+  Once fees are charged on `raw`, the handler's second trim branch cannot
+  change the result.
+
+`previewLegacyBuy` / `previewLegacySell` also describe the native-SOL
+`buy_v2` / `sell_v2` handlers. They use the same check order, quote and fee
+arithmetic. Draft PR #47 executes both families and confirms the deltas.
 
 ## Fees are an explicit input
 
@@ -74,6 +93,19 @@ pool fees and migration charges are separate.
 `fixtures/quote.receipt.json` records the command, the toolchain and the
 SHA-256 of the source and the output. The tests recheck both hashes.
 
+`fixtures/quote-exact-in.json` is not a restated formula. It records 20
+executions of the real `buy_exact_quote_in_v2` handler on one native-SOL curve
+in a local bank, using the synthetic 95/30-bps fee program. The cases cover
+the zero-limit and zero-input errors, sub-fee inputs, the trim path at
+1 000 000 014 lamports, a non-partial over-reserve buy (`NotEnoughTokensToBuy`),
+a partial fill that completes the curve, and a buy after completion. Each case
+records the observed tokens, the curve's quote delta, the fee and buyback
+recipients' combined delta and the creator-vault delta, or the program error.
+`previewBuyExactQuoteInV2` matches every one. The producer is the ignored test
+`tests/legacy-trade-runtime/tests/exact_in_fixture.rs` on draft PR #47's
+branch. `quote-exact-in.receipt.json` pins that commit, the producer's SHA-256
+and the output hash. Two runs produced identical bytes.
+
 ## Not covered
 
 - **Handler composition.** The order and checks in the previews come from
@@ -82,7 +114,7 @@ SHA-256 of the source and the output. The tests recheck both hashes.
 - **Chain state.** The helpers read nothing from chain. The caller's token
   balance, `global.whitelist_pda`, the fee CPI result and curve freshness
   must come from an authenticated source.
-- **Other paths.** V2/V3, quote-mint, Mayhem and cashback trades are not
-  modelled.
+- **Other paths.** V3, non-SOL quote-mint, Token-2022 quote transfer-fee,
+  Mayhem and cashback trades are not modelled.
 - **No execution.** There is no RPC, wallet, signing or transaction
   submission. A quote is not a guarantee of execution.
