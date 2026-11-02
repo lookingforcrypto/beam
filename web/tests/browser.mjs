@@ -136,6 +136,12 @@ try {
     /0\.42% community \/ 0\.05% treasury \/ 0\.03% founder/,
   );
   assert.doesNotMatch(initialCopy, /CPMM|durable liquidity|lasting liquidity/i);
+  const hillCopy = await evaluate(
+    "document.querySelector('.hill-preview')?.innerText",
+  );
+  assert.match(hillCopy, /King of the Hill/i);
+  assert.match(hillCopy, /No live leader/i);
+  assert.match(hillCopy, /sample tokens below are not ranked/i);
 
   // A malformed watchlist must not prevent React from rendering on reload.
   await evaluate(
@@ -168,6 +174,12 @@ try {
   assert.equal(
     await evaluate(
       "document.querySelector('.modal-panel').getBoundingClientRect().right <= innerWidth",
+    ),
+    true,
+  );
+  assert.equal(
+    await evaluate(
+      "document.querySelector('.hill-preview').getBoundingClientRect().right <= innerWidth",
     ),
     true,
   );
