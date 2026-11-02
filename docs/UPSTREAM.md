@@ -10,13 +10,16 @@ The [archived source snapshot](../upstream/pumpfun-source/README.md) remains
 available in Beam. On 2 November 2026, the historical public repository and
 commit URLs returned 404 through GitHub's API. That result alone does not
 distinguish deletion from a private or moved repository.
+On the same date, a [surviving fork served the pinned commit](https://github.com/y4coub/pumpfun-source/tree/5703df02131ab944408e0cf679b4bef9c22e1a3d)
+with the same Git tree ID, `35c5ccdbb1564999785dcfb703e45adb95948497`.
+That fork's default branch is an older reconstruction checkpoint.
 
 The pin is recorded in [`upstream/manifest.json`](../upstream/manifest.json).
 The tree under `upstream/pumpfun-source` is that commit. Its 380 Git blobs,
 paths, and file modes match the locally preserved Git tree for that commit and
 [`upstream/files.json`](../upstream/files.json). This is a complete copy of the
 pinned source-only tree, not a backup of the full Git history, research files,
-captured binaries, or pump.fun website and backend.
+captured binaries, GitHub discussions, or pump.fun website and backend.
 
 That repository contains a community reconstruction, not an official
 pump.fun release. The archived MIT notice in
