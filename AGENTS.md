@@ -98,6 +98,12 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   buyback split. A claimed higher share than competitors, including Pump.fun,
   needs comparable bases, periods and realized spending evidence. Do not
   promise price appreciation or describe any buyback as active.
+- Support for communities around existing launched tokens is a separate goal
+  from flagship $BEAM buybacks. Keep per-token rewards/buybacks, creator fees,
+  operating allocations and any promotional spending in distinct, auditable
+  budgets from realized receipts. Never count one receipt twice. The balance
+  and any promotional policy are unapproved; do not ban callouts, authorize
+  new spending, or promise token survival or returns from this goal.
 
 ## Validation and review
 

@@ -49,6 +49,14 @@ to allocate more revenue than competitors, including Pump.fun, is unverified
 until comparable bases, periods, commitments and realized spending are checked.
 No buyback or burn is active, and neither guarantees $BEAM price appreciation.
 
+Support for communities around existing launched tokens is a separate goal
+from flagship-only $BEAM spending. Any per-token rewards or buybacks, creator
+payouts, operations and promotional spending need distinct, auditable budgets
+from actually collected receipts; the same revenue cannot fund two promises.
+The balance among them remains undecided. Callouts remain a planned feature,
+but no promotional spend is approved, and neither attention nor fee recycling
+can guarantee a token's survival or returns.
+
 Durable liquidity is also a product goal. Future validation must compare
 initial and continuing pool depth, LP ownership and withdrawal control,
 lock-versus-burn tradeoffs, slippage at comparable trade sizes, and behavior

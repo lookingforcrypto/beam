@@ -40,6 +40,14 @@ execution safeguards and auditable receipts remain undecided. No token launch,
 buyback, trade or burn is authorized by this document. Buybacks do not ensure
 price appreciation or a self-sustaining return cycle.
 
+Existing launched-token communities also need a separate, reviewable support
+budget; flagship $BEAM buybacks are not the whole ecosystem policy. Track each
+actual receipt and its allocation once, with auditable lines for per-token
+rewards/buybacks, creator entitlements, operating funds, flagship spending and
+any disclosed promotion. The relative amounts and any callout/promotion budget
+are undecided. This does not ban callouts or authorize promotional payments,
+and it cannot promise that existing tokens survive or produce returns.
+
 ## After graduation
 
 Raydium charges its selected on-chain pool configuration. Beam cannot invent a Raydium share such as 0.10%. Quotes must distinguish Raydium pool fees, creator fees, Beam fees, and migration fees, and must not silently stack the curve's 50 bps on top after graduation. The user selected Raydium AMM v4; the existing gated CPMM migration code is a superseded candidate and does not satisfy that venue requirement.
