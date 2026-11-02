@@ -1,7 +1,8 @@
-# Legacy trade local bank
+# Native-SOL trade local bank
 
-This crate runs Beam's native-SOL `create_v2`, legacy `buy` and legacy `sell`
-handlers inside a `solana-program-test` 2.2.1 bank. It loads Beam as a native
+This crate runs Beam's native-SOL `create_v2`, legacy `buy` and `sell`, and V2
+`buy_v2`, `buy_exact_quote_in_v2` and `sell_v2` handlers inside a
+`solana-program-test` 2.2.1 bank. Shared setup lives in `tests/common/mod.rs`. It loads Beam as a native
 processor, in the same way as the draft `tests/runtime-harness`.
 
 ```sh
@@ -28,6 +29,9 @@ differ.
   remain open owner decisions.
 - **`fee_config` and `global_volume_accumulator`.** Both are injected at their
   PDAs, with Anchor discriminators.
+- **WSOL mint.** An initialised WSOL mint is injected, because V2 handlers take
+  it as `quote_mint` for native-SOL curves. They require the quote ATAs as
+  addresses, but pay in lamports.
 
 ## What the tests show
 
@@ -54,6 +58,32 @@ differ.
    fails with `NotAuthorized`, and a creator vault derived from another key
    fails with `ConstraintSeeds`. Zero-amount buys and sells are rejected.
 
+4. **V2 at exact bounds (`tests/v2_trade.rs`).**
+   - `buy_v2` and `sell_v2` succeed at the exact `max_sol_cost` /
+     `min_sol_output` and fail one lamport past it, as the legacy handlers do.
+     The curve, fee recipient, buyback recipient and creator vault deltas
+     match.
+   - The buyback recipient is a named account, not a remaining account.
+5. **`buy_exact_quote_in_v2`.** The test restates the handler's native
+   arithmetic and checks it against the runtime:
+   - The quote is grossed down: `raw = input · 10 000 / (10 000 + protocol
+     bps + creator bps)`.
+   - Both ceiling fees are charged on `raw`.
+   - The quote is trimmed when rounding pushes the total past `input`. The
+     first such input above 1 SOL is 1 000 000 014 lamports. There the user
+     spends exactly `input`, while the fees stay computed on the untrimmed
+     quote.
+   - Tokens equal `tokens_for_quote(quote)`. One token above that as
+     `min_tokens_out` fails with `BuySlippageBelowMinTokensOut`.
+   - The handler has a second trim branch after the first. With fees on
+     `raw`, that branch cannot change the result, because the first trim
+     already makes `quote + fees == input`.
+   - With partial fill, the buy clamps to the real reserves, charges only
+     `buy_quote` for them and completes the curve.
+6. **V2 rejected inputs.** A non-WSOL quote mint, an unlisted buyback or fee
+   recipient, a quote ATA derived for the wrong token program, and a zero
+   amount are each rejected.
+
 ## Remaining accounts
 
 Legacy `buy` and `sell` read `remaining_accounts[0]` as the
@@ -66,7 +96,8 @@ return only the base metas, so a client must append both accounts.
 
 - Real fee-program behaviour, fee tiers by market cap, or Beam's planned
   0.50% / 42-5-3 policy.
-- Whitelist-PDA trades, cashback, holder rewards, Mayhem, quote-mint and
-  V2/V3 handlers, and volume tracking.
+- Whitelist-PDA trades, cashback, holder rewards, Mayhem, non-SOL quote
+  mints, Token-2022 transfer fees, V3 handlers, sharing configs and volume
+  tracking.
 - Migration after completion, an SBF binary, compute-unit limits or a
   deployed program.

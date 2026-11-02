@@ -3,7 +3,7 @@ name = "beam-legacy-trade-runtime"
 version = "0.1.0"
 edition = "2021"
 publish = false
-description = "Synthetic local-bank execution of Beam's native-SOL CreateV2, legacy buy and legacy sell handlers. Not a deployment or a live fee path."
+description = "Synthetic local-bank execution of Beam's native-SOL CreateV2, legacy buy/sell and V2 buy/sell handlers. Not a deployment or a live fee path."
 
 [features]
 default = []

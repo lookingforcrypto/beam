@@ -1,4 +1,4 @@
-name: Legacy trade local bank
+name: Native-SOL trade local bank
 on: [push, pull_request]
 permissions:
   contents: read

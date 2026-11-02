@@ -5,179 +5,20 @@
 //! The inherited Pump fee program is replaced by a synthetic processor that
 //! returns fixed basis points. Those bps are test inputs, not Beam or Pump
 //! fee policy. Nothing here touches a live network, wallet or fee program.
-use anchor_lang::{
-    prelude::Pubkey, solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, program::set_return_data},
-    AccountDeserialize, AccountSerialize, AnchorSerialize, InstructionData, ToAccountMetas,
-};
+mod common;
+
+use common::*;
+use anchor_lang::{prelude::Pubkey, InstructionData, ToAccountMetas};
 use anchor_spl::{
-    associated_token::{get_associated_token_address_with_program_id as ata, spl_associated_token_account},
-    token_2022::spl_token_2022::{self, extension::StateWithExtensions, state::{Account as TokenAccount, Mint}},
+    associated_token::get_associated_token_address_with_program_id as ata,
+    token_2022::spl_token_2022::{self, extension::StateWithExtensions, state::Mint},
 };
-use beam_program::{
-    buy_quote, fee_math::fee, pump_fees::{accounts::FeeConfig, types::Fees},
-    trade_types::BondingCurve, Global, GlobalVolumeAccumulator, OptionBool, PumpError, CreationOptionU64,
-};
-use solana_program_test::{processor, BanksClientError, ProgramTest, ProgramTestContext};
+use beam_program::{buy_quote, OptionBool, PumpError};
 use solana_sdk::{
-    account::Account, instruction::{AccountMeta, Instruction, InstructionError}, rent::Rent,
-    signature::{Keypair, Signer}, system_program, transaction::{Transaction, TransactionError},
+    instruction::{AccountMeta, Instruction}, rent::Rent, signature::Signer, system_program,
 };
-
-const FEE_PROGRAM: Pubkey = beam_program::pump_fees::ID;
-const MAYHEM: Pubkey = beam_program::mayhem::ID;
-const PROTOCOL_BPS: u64 = 95;
-const CREATOR_BPS: u64 = 30;
-const BUYBACK_BPS: u64 = 2_000;
-const INITIAL_VIRTUAL_TOKENS: u64 = 1_073_000_000_000_000;
-const INITIAL_VIRTUAL_SOL: u64 = 30_000_000_000;
-const INITIAL_REAL_TOKENS: u64 = 793_100_000_000_000;
-const TOTAL_SUPPLY: u64 = 1_000_000_000_000_000;
-const GET_FEES_WITH_QUOTE_MINT: [u8; 8] = [154, 237, 138, 92, 162, 2, 162, 187];
-
-fn pda(seeds: &[&[u8]], program: &Pubkey) -> Pubkey { Pubkey::find_program_address(seeds, program).0 }
-fn global_pda() -> Pubkey { pda(&[b"global"], &beam_program::ID) }
-fn curve_pda(mint: &Pubkey) -> Pubkey { pda(&[b"bonding-curve", mint.as_ref()], &beam_program::ID) }
-fn creator_vault(creator: &Pubkey) -> Pubkey { pda(&[b"creator-vault", creator.as_ref()], &beam_program::ID) }
-fn event_authority() -> Pubkey { pda(&[b"__event_authority"], &beam_program::ID) }
-fn fee_config_pda() -> Pubkey { pda(&[b"fee_config", beam_program::ID.as_ref()], &FEE_PROGRAM) }
-
-fn beam_processor<'a>(program_id: &Pubkey, accounts: &[AccountInfo<'a>], data: &[u8]) -> ProgramResult {
-    // SAFETY: ProgramTest invokes the processor synchronously and neither side
-    // retains the slice; Anchor's entrypoint requires the shared lifetime.
-    let accounts: &'a [AccountInfo<'a>] = unsafe { std::mem::transmute(accounts) };
-    beam_program::entry(program_id, accounts, data)
-}
-
-/// Synthetic stand-in for the inherited fee program's `get_fees_with_quote_mint`.
-fn fee_processor(_program_id: &Pubkey, accounts: &[AccountInfo], data: &[u8]) -> ProgramResult {
-    assert_eq!(&data[..8], &GET_FEES_WITH_QUOTE_MINT, "unexpected fee instruction");
-    assert_eq!(data.len(), 8 + 1 + 16 + 32, "bool, u128 market cap, quote mint");
-    assert_eq!(data[8], 1, "legacy trades query with is_pump_pool = true");
-    assert!(u128::from_le_bytes(data[9..25].try_into().unwrap()) > 0, "market cap is positive");
-    assert_eq!(&data[25..57], Pubkey::default().as_ref(), "native SOL quote mint");
-    assert_eq!(*accounts[0].key, fee_config_pda());
-    assert_eq!(*accounts[1].key, beam_program::ID);
-    let fees = Fees { lp_fee_bps: 0, protocol_fee_bps: PROTOCOL_BPS, creator_fee_bps: CREATOR_BPS };
-    set_return_data(&fees.try_to_vec().unwrap());
-    Ok(())
-}
-
-fn owned(data: Vec<u8>, owner: Pubkey) -> Account {
-    Account { lamports: Rent::default().minimum_balance(data.len()), data, owner, executable: false, rent_epoch: 0 }
-}
-fn wallet(lamports: u64) -> Account {
-    Account { lamports, data: vec![], owner: system_program::ID, executable: false, rent_epoch: 0 }
-}
-
-struct Bank {
-    ctx: ProgramTestContext,
-    user: Keypair,
-    creator: Pubkey,
-    fee_recipient: Pubkey,
-    buyback: Pubkey,
-    stranger: Pubkey,
-    mint: Keypair,
-}
-
-async fn bank() -> Bank {
-    let user = Keypair::new();
-    let creator = Pubkey::new_unique();
-    let fee_recipient = Pubkey::new_unique();
-    let buyback = Pubkey::new_unique();
-    let stranger = Pubkey::new_unique();
-
-    let zeroed = vec![0u8; 4_096];
-    let mut global = Global::try_deserialize_unchecked(&mut &zeroed[..]).unwrap();
-    global.initialized = true;
-    global.authority = Pubkey::new_unique();
-    global.fee_recipient = fee_recipient;
-    global.initial_virtual_token_reserves = INITIAL_VIRTUAL_TOKENS;
-    global.initial_virtual_sol_reserves = INITIAL_VIRTUAL_SOL;
-    global.initial_real_token_reserves = INITIAL_REAL_TOKENS;
-    global.token_total_supply = TOTAL_SUPPLY;
-    global.create_v2_enabled = true;
-    global.whitelist_pda = Pubkey::new_unique();
-    global.buyback_fee_recipients = [buyback; 8];
-    global.buyback_basis_points = BUYBACK_BPS;
-    let mut global_data = Vec::new();
-    global.try_serialize(&mut global_data).unwrap();
-
-    let zeroed_volume = vec![0u8; 1_024];
-    let volume = GlobalVolumeAccumulator::try_deserialize_unchecked(&mut &zeroed_volume[..]).unwrap();
-    let mut volume_data = Vec::new();
-    volume.try_serialize(&mut volume_data).unwrap();
-
-    let empty = Fees { lp_fee_bps: 0, protocol_fee_bps: 0, creator_fee_bps: 0 };
-    let config = FeeConfig {
-        bump: 0, admin: Pubkey::default(), flat_fees: empty.clone(),
-        fee_tiers: vec![], stable_fee_tiers: vec![], exotic_flat_fees: empty,
-    };
-    let mut config_data = Vec::new();
-    config.try_serialize(&mut config_data).unwrap();
-
-    let mut test = ProgramTest::new("beam_program", beam_program::ID, processor!(beam_processor));
-    test.add_program("synthetic_fee_program", FEE_PROGRAM, processor!(fee_processor));
-    test.add_account(global_pda(), owned(global_data, beam_program::ID));
-    test.add_account(pda(&[b"global_volume_accumulator"], &beam_program::ID), owned(volume_data, beam_program::ID));
-    test.add_account(fee_config_pda(), owned(config_data, FEE_PROGRAM));
-    test.add_account(user.pubkey(), wallet(100_000_000_000));
-    // Pre-funded so that small fee transfers never leave them below rent.
-    test.add_account(fee_recipient, wallet(1_000_000_000));
-    test.add_account(buyback, wallet(1_000_000_000));
-    test.add_account(stranger, wallet(1_000_000_000));
-    Bank { ctx: test.start_with_context().await, user, creator, fee_recipient, buyback, stranger, mint: Keypair::new() }
-}
 
 impl Bank {
-    async fn send(&mut self, instructions: &[Instruction], extra: &[&Keypair]) -> Result<(), BanksClientError> {
-        let blockhash = self.ctx.banks_client.get_latest_blockhash().await.unwrap();
-        let mut signers: Vec<&Keypair> = vec![&self.ctx.payer, &self.user];
-        signers.extend_from_slice(extra);
-        let tx = Transaction::new_signed_with_payer(instructions, Some(&self.ctx.payer.pubkey()), &signers, blockhash);
-        self.ctx.banks_client.process_transaction(tx).await
-    }
-    async fn lamports(&mut self, key: Pubkey) -> u64 {
-        self.ctx.banks_client.get_account(key).await.unwrap().map_or(0, |a| a.lamports)
-    }
-    async fn curve(&mut self) -> BondingCurve {
-        let data = self.ctx.banks_client.get_account(curve_pda(&self.mint.pubkey())).await.unwrap().unwrap().data;
-        BondingCurve::try_deserialize(&mut &data[..]).unwrap()
-    }
-    async fn token_balance(&mut self, owner: &Pubkey) -> u64 {
-        let key = ata(owner, &self.mint.pubkey(), &spl_token_2022::ID);
-        let data = self.ctx.banks_client.get_account(key).await.unwrap().unwrap().data;
-        StateWithExtensions::<TokenAccount>::unpack(&data).unwrap().base.amount
-    }
-
-    fn create_v2(&self) -> Instruction {
-        let mint = self.mint.pubkey();
-        let curve = curve_pda(&mint);
-        let accounts = beam_program::accounts::CreateV2 {
-            mint, mint_authority: pda(&[b"mint-authority"], &beam_program::ID), bonding_curve: curve,
-            associated_bonding_curve: ata(&curve, &mint, &spl_token_2022::ID), global: global_pda(),
-            user: self.user.pubkey(), system_program: system_program::ID, token_program: spl_token_2022::ID,
-            associated_token_program: spl_associated_token_account::ID, mayhem_program_id: MAYHEM,
-            global_params: pda(&[b"global-params"], &MAYHEM), sol_vault: pda(&[b"sol-vault"], &MAYHEM),
-            mayhem_state: pda(&[b"mayhem-state", mint.as_ref()], &MAYHEM),
-            mayhem_token_vault: Pubkey::new_unique(), event_authority: event_authority(), program: beam_program::ID,
-        };
-        Instruction {
-            program_id: beam_program::ID,
-            accounts: accounts.to_account_metas(None),
-            data: beam_program::instruction::CreateV2 {
-                name: "Beam Runtime".into(), symbol: "BRT".into(), uri: "https://example.invalid/brt.json".into(),
-                creator: self.creator, is_mayhem_mode: false, is_cashback_enabled: OptionBool(false),
-                creator_fee_bps: CreationOptionU64(0), is_holder_reward: OptionBool(false),
-            }.data(),
-        }
-    }
-
-    fn create_user_ata(&self) -> Instruction {
-        spl_associated_token_account::instruction::create_associated_token_account_idempotent(
-            &self.user.pubkey(), &self.user.pubkey(), &self.mint.pubkey(), &spl_token_2022::ID,
-        )
-    }
-
     /// Base metas from Anchor, plus the two remaining accounts the handlers
     /// read: `[bonding-curve-v2 PDA, buyback fee recipient]`.
     fn trade_metas(&self, buy: bool, fee_recipient: Pubkey, vault_creator: Pubkey, remaining: bool) -> Vec<AccountMeta> {
@@ -231,22 +72,6 @@ impl Bank {
             data: beam_program::instruction::Sell { amount, min_sol_output }.data(),
         }
     }
-}
-
-fn custom_error(result: Result<(), BanksClientError>) -> u32 {
-    match result.expect_err("transaction must fail").unwrap() {
-        TransactionError::InstructionError(_, InstructionError::Custom(code)) => code,
-        other => panic!("unexpected error {other:?}"),
-    }
-}
-fn code(error: PumpError) -> u32 { error.into() }
-
-struct Expected { cost: u64, protocol: u64, creator: u64, buyback: u64 }
-fn expected_fees(quote: u64) -> Expected {
-    let protocol = fee(quote, PROTOCOL_BPS).unwrap();
-    let creator = fee(quote, CREATOR_BPS).unwrap();
-    let buyback = u64::try_from(u128::from(BUYBACK_BPS) * u128::from(protocol) / 10_000).unwrap();
-    Expected { cost: quote, protocol, creator, buyback }
 }
 
 #[tokio::test]
