@@ -84,6 +84,16 @@ differ.
    recipient, a quote ATA derived for the wrong token program, and a zero
    amount are each rejected.
 
+7. **Exact-quote-in fixture producer (`tests/exact_in_fixture.rs`).** This
+   test is ignored by default. It runs `buy_exact_quote_in_v2` over a grid of
+   inputs on one curve and prints the observed token, quote, fee and
+   creator-fee deltas, or the program error, as JSON. Its output backs the
+   SDK's exact-quote-in preview:
+
+   ```sh
+   cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's/^@@//p'
+   ```
+
 ## Remaining accounts
 
 Legacy `buy` and `sell` read `remaining_accounts[0]` as the
