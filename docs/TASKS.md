@@ -4,8 +4,22 @@ This ledger records scope and evidence checked through 2 November 2026. Check th
 branches and pull requests before starting work; status may change. These are
 contribution scopes, not paid bounties. Beam's Slop listing was paused with a
 security scan queued on 1 November; its state could not be verified on
-2 November. Do not claim clearance, reward funding or authorization to resume
-feature work from this ledger. See [contribution status](STATUS.md#contribution-and-security-status).
+2 November. The maintainer has separately resumed cloud development; do not
+infer Slop clearance or reward funding from that authorization. See
+[contribution status](STATUS.md#contribution-and-security-status).
+
+## Active review overlaps, 2 November 2026
+
+This is a dated dependency map, not a merge-readiness judgment. Verify the
+current head, base, diff and exact-head checks before claiming a lane.
+
+| Open work | Ownership boundary | Review dependency or current limit |
+| --- | --- | --- |
+| [#36](https://github.com/shawkkkkk/beam/pull/36) and stacked [#49](https://github.com/shawkkkkk/beam/pull/49) | Retired PumpSwap interfaces, AMM v4 replacement routing, creator/CTO/donation rights in `programs/beam/`. | #36 currently conflicts with `main`; #49 is based on #36. #49's creator payout from the 42-bps community share is a proposal, not an approved funding choice. Review combined source, IDL, runtime and account authority before integration. |
+| [#39](https://github.com/shawkkkkk/beam/pull/39) | Generated IDL and SDK fixtures. | Reconcile the IDL with final integrated source and error messages; historical PumpSwap identifiers in a reference catalog are not operational routing. |
+| [#45](https://github.com/shawkkkkk/beam/pull/45), [#46](https://github.com/shawkkkkk/beam/pull/46), [#47](https://github.com/shawkkkkk/beam/pull/47) | PDA/ATA SDK derivation, local legacy quote helpers and native-SOL local-bank trades. | Coordinate fixtures and exact contract accounts. Hosted workflows on their latest heads were `action_required` at this checkpoint, not passing tests. |
+| [#48](https://github.com/shawkkkkk/beam/pull/48), [#53](https://github.com/shawkkkkk/beam/pull/53) → [#54](https://github.com/shawkkkkk/beam/pull/54) | Preview watchlist bound; product/contributor guidance; stacked retro brand. | #48 has held `action_required` workflows. #53 and #54 remain drafts; #54 depends on #53. King of the Hill and community discovery are planned, not live rankings or services. |
+| [#51](https://github.com/shawkkkkk/beam/pull/51) | `buy_v2.rs` shared-reference Clippy fix. | Its latest workflows are `action_required`; do not report the contributor's local checks as hosted CI results. |
 
 ## Current work and ownership
 
