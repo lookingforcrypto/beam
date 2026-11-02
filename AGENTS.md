@@ -49,6 +49,12 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   user chose Raydium AMM v4; build and verify that adapter separately before
   activation. Current LP burning does not leave Beam an LP fee claim for
   recurring buybacks. Principal custody and fee rights remain unresolved.
+- Durable liquidity is a product goal, not a consequence proved by choosing
+  AMM v4. Compare initial and continuing depth, LP ownership/control and
+  withdrawal rights, lock/burn tradeoffs, slippage at comparable trade sizes,
+  and post-graduation pool behavior. Do not pick an LP scheme or promise chart
+  resilience from historical Raydium-versus-PumpSwap anecdotes; comparable
+  liquidity and market-period evidence is required to test that hypothesis.
 - `beam_economics.rs` contains provisional fee-allocation arithmetic; the
   inherited Pump fee CPI still governs real trade collection. The community
   share's holder-reward/buyback split is a provisional test setting. Holder
@@ -80,6 +86,16 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   design is a goal, not a return guarantee. Do not impose ticker exclusivity,
   launch restrictions, fees or rewards from this direction alone, or promise
   token performance or loss prevention.
+- The flagship $BEAM token is intended to launch on Beam, with a very high but
+  unquantified share of eligible protocol revenue intended for buybacks and
+  burns. No rate, mint, revenue denominator, budget, vault, authority or
+  automatic execution is approved. Define actually collected, spendable Beam
+  revenue separately from volume, creator entitlements, third-party fees and
+  reserved community rewards. Reconcile the goal with 42/5/3 bps and creator
+  funding; never double-count funds or overwrite the provisional holder and
+  buyback split. A claimed higher share than competitors, including Pump.fun,
+  needs comparable bases, periods and realized spending evidence. Do not
+  promise price appreciation or describe any buyback as active.
 
 ## Validation and review
 

@@ -37,6 +37,26 @@ does not promise profitable launches, price support, loss prevention, or any
 particular token size. See the [feature ledger](docs/FEATURES.md) for what is
 actually implemented.
 
+The flagship **$BEAM** token is intended to launch on Beam. The goal is to
+devote a very high, **not yet quantified** share of eligible protocol revenue
+to $BEAM buybacks and burns. No percentage, revenue denominator, spending
+authority, mint, or execution budget is approved. Define revenue from amounts
+Beam actually collects and may spend; do not treat trading volume, creator
+entitlements, third-party Raydium fees, or reserved community rewards as
+available buyback funds. Reconcile this goal with the existing 42/5/3-bps
+allocation and unresolved creator funding before implementing it. An ambition
+to allocate more revenue than competitors, including Pump.fun, is unverified
+until comparable bases, periods, commitments and realized spending are checked.
+No buyback or burn is active, and neither guarantees $BEAM price appreciation.
+
+Durable liquidity is also a product goal. Future validation must compare
+initial and continuing pool depth, LP ownership and withdrawal control,
+lock-versus-burn tradeoffs, slippage at comparable trade sizes, and behavior
+after graduation. The historical claim that Raydium charts were more durable
+than PumpSwap charts is an unverified hypothesis, not proof of venue causation
+or a promise that Beam charts will be resilient. No LP custody or burn design
+is chosen here.
+
 ## Attribution / Upstream
 
 Beam vendors the community reconstruction of pump.fun's on-chain programs as an [archived pumpfun-source snapshot](upstream/pumpfun-source/README.md), pinned at commit `5703df02131ab944408e0cf679b4bef9c22e1a3d`. The [provenance record](docs/UPSTREAM.md) includes the historical repository URL.
@@ -111,7 +131,7 @@ and the [dated PR dependency queue](docs/TASKS.md) for more detail.
 
 | Requirement | Current boundary |
 | --- | --- |
-| Verified AMM v4 migration and liquidity | Merged PR #38 invokes the pinned Raydium source processor through a local probe and tests selected rollback and replay cases. It does not execute Beam's migration handler or validate deployed Raydium bytecode. Authenticate Beam account state and receipts, and decide LP custody/fee rights before enabling migration. |
+| Verified AMM v4 migration and liquidity | Merged PR #38 invokes the pinned Raydium source processor through a local probe and tests selected rollback and replay cases. It does not execute Beam's migration handler or validate deployed Raydium bytecode. Authenticate Beam account state and receipts; measure pool depth, LP rights, slippage and post-graduation behavior before choosing LP custody or enabling migration. |
 | Token compatibility | Raydium AMM v4 accepts classic SPL Token mints; Beam's curve also retains restricted Token-2022 support. A safe graduation plan for those launches is unresolved. |
 | Enforced and disclosed fees | Beam's proposed allocation is not wired into trades. Decide creator funding, vault authority, community distribution, migration charges and all-in quote behavior. |
 | Complete client and services | Regenerate the Beam IDL; add authenticated indexer, wallet/client and authorized creator, charity, callout and media integrations. Sample data and mocks cannot be presented as live observations. |

@@ -160,7 +160,11 @@ precise specification and isolated adversarial tests.
    CPMM candidate with a verified AMM v4 adapter. Specify who can withdraw
    principal and collect ongoing fees, then test those permissions. Current
    CPMM LP burning supplies no recurring LP-fee income. Keep migration disabled
-   until the design and tests resolve this.
+   until the design and tests resolve this. Assess initial and continuing pool
+   depth, LP ownership and withdrawal control, lock/burn tradeoffs, slippage
+   and price impact at comparable trade sizes, and post-graduation liquidity.
+   Historical Raydium/PumpSwap chart comparisons need matched periods and pool
+   evidence before any causal or durability claim.
 3. **Raydium AMM v4 migration validation.** Build on PR #38's pinned-source
    local CPI fixture to exercise the actual Beam migration handler, pool identity,
    config/mint/vault/reserve deltas, fee liabilities, donated balances,
@@ -178,7 +182,12 @@ precise specification and isolated adversarial tests.
    If creator payouts use that allocation, divide only its remainder. A 50/50
    division of the available amount is a provisional test setting. Holder
    eligibility, flagship mint, recipients, and execution policy remain to be
-   specified. Do not add automatic market orders or claim perpetual revenue.
+   specified. The flagship $BEAM token is intended to launch on Beam; a very
+   high but unquantified share of eligible protocol revenue is intended for
+   buybacks and burns. Define the revenue base and reconcile it with 42/5/3,
+   creator funding and holder rewards before choosing any rate. Do not count
+   volume or third-party fees as spendable revenue, double-count allocated
+   funds, add automatic market orders or claim perpetual revenue or returns.
 6. **Feature parity outside the contract.** Use the [feature matrix](FEATURES.md)
    to distinguish on-chain interfaces from missing product services. Build
    authorized creator-wallet, callout, and livestream experiences without
