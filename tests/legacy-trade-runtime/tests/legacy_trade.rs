@@ -282,3 +282,36 @@ async fn collection_is_refused_for_a_sharing_config_creator() {
         code(PumpError::UnableToDistributeCreatorVaultMigratedToSharingConfig));
     assert_eq!(b.lamports(creator_vault(&creator)).await, vault_before, "the vault is untouched");
 }
+
+/// The first claim would succeed by itself. A later invalid claim in the same
+/// transaction must undo that transfer, including the synthetic vault debit.
+#[tokio::test]
+async fn late_recipient_substitution_rolls_back_an_earlier_creator_claim() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    b.send(&[b.buy(35_000_000_000_000, u64::MAX, false)], &[]).await.expect("buy");
+
+    let (creator, stranger) = (b.creator, b.stranger);
+    let vault = creator_vault(&creator);
+    let before = (b.lamports(creator).await, b.lamports(stranger).await, b.lamports(vault).await);
+    assert!(before.2 > Rent::default().minimum_balance(0), "a claim must be available");
+
+    // The test payer alone signs. The second instruction's vault is derived
+    // for creator, not stranger, so Anchor rejects it after the first claim.
+    let instructions = [
+        b.collect_creator_fee(creator, creator),
+        b.collect_creator_fee(stranger, creator),
+    ];
+    let blockhash = b.ctx.banks_client.get_latest_blockhash().await.unwrap();
+    let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(
+        &instructions, Some(&b.ctx.payer.pubkey()), &[&b.ctx.payer], blockhash,
+    );
+    let seeds: u32 = anchor_lang::error::ErrorCode::ConstraintSeeds.into();
+    assert_eq!(custom_error(b.ctx.banks_client.process_transaction(tx).await), seeds);
+    assert_eq!(
+        (b.lamports(creator).await, b.lamports(stranger).await, b.lamports(vault).await),
+        before,
+        "a late failed instruction must roll back an earlier valid payout",
+    );
+}
