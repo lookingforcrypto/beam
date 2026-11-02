@@ -1,19 +1,19 @@
 # Low-usage PR review proposal
 
-This proposal is **inactive**. The accompanying workflow has only a manual
-`workflow_dispatch` trigger and read permissions. The draft PR must not be
-merged or activated without a separate maintainer review. It does not approve,
-mark ready, enable auto-merge, merge, label, comment, or change repository
-settings. Feature development and live deployment remain paused.
+The accompanying workflow runs only when a maintainer manually dispatches it.
+It has read permissions and does not approve, mark ready, enable auto-merge,
+merge, label, comment, or change repository settings. Adding this workflow to
+`main` does not enable auto-merge. Feature development and live deployment
+remain paused.
 
 ## Current repository facts (2 November 2026)
 
 - `shawkkkkk/beam` is public. The repository API reports
   `allow_auto_merge: false`; native auto-merge is currently disabled.
-- The read-only rulesets endpoint returned an empty list. The connected GitHub
-  App received `403 Resource not accessible by integration` for main's branch
-  protection endpoint, so required reviews/checks and merge-queue policy are
-  **unknown**. An empty ruleset list does not prove there is no protection.
+- The maintainer reports no rules on `main`. The read-only rulesets endpoint
+  returned an empty list; the connected GitHub App received `403 Resource not
+  accessible by integration` for main's branch-protection endpoint. The App
+  therefore cannot independently verify that report or a merge-queue policy.
 - Existing workflows are contract, website, native SDK/service, and AMM v4
   local-validator tests. They request read permissions. Website browser tests
   are separate from hosted website CI; a green check is not full product
@@ -21,7 +21,7 @@ settings. Feature development and live deployment remain paused.
 - The repository owner is `shawkkkkk`. This proposal creates no bot account,
   personal token, GitHub App installation, or secret.
 
-## What the draft supplies
+## What the read-only workflow supplies
 
 `.github/workflows/pr-review-snapshot.yml` reads one PR on manual request. It
 prints its head SHA, draft/mergeable API values, and the first page of check
@@ -35,12 +35,13 @@ summary cannot prove every check or review was inspected.
 ## Activation decision, separately required
 
 The least complex future route is GitHub's native auto-merge after maintainers
-verify a protection policy with required human review and the exact relevant
-status checks. GitHub says native auto-merge waits for those requirements;
-the repository setting must be enabled first. Do not assume a merge queue is
-configured for this personal repository. If a PR changes contract funds,
-fees, authorization, workflows, migrations, or dependency trust, require
-deliberate human review of its combined tree and applicable runtime tests.
+add and verify a protection policy with required human review and the exact
+relevant status checks. GitHub says native auto-merge waits for those
+requirements; the repository setting must be enabled first. Do not assume a
+merge queue is configured for this personal repository. If a PR changes
+contract funds, fees, authorization, workflows, migrations, or dependency
+trust, require deliberate human review of its combined tree and applicable
+runtime tests.
 
 If maintainers later want an event-driven *report*, a separately reviewed
 change could use `pull_request` events without write permission. If they want
