@@ -181,10 +181,12 @@ precise specification and isolated adversarial tests.
    specified. Do not add automatic market orders or claim perpetual revenue.
 6. **Feature parity outside the contract.** Use the [feature matrix](FEATURES.md)
    to distinguish on-chain interfaces from missing product services. Build
-   authorized creator-wallet, charity/donation, callout, and livestream
-   experiences without copying unavailable proprietary backends or presenting
-   sample data as live. Keep external disbursements and streams disabled until
-   the service, permissions, and tests exist.
+   authorized creator-wallet, callout, and livestream experiences without
+   copying unavailable proprietary backends or presenting sample data as live.
+   Charity/donation design is open; do not choose compulsory deductions, a
+   provider or an allocation while reviewing its disabled mock. Keep external
+   disbursements and streams disabled until the service, permissions, and tests
+   exist.
 7. **Complete PumpSwap removal without losing features.** Audit active Beam
    handlers, quote-chain paths, creator-fee/sharing/CTO instructions,
    donation creation/collection, SDK and UI for PumpSwap program IDs, CPIs,
@@ -209,7 +211,7 @@ behavior and interface tests, not recovered proprietary web/backend bytes.
 | Wallet SDK and IDL | PR #13 creator remains draft; PR #18 CreateV2 and PR #20 raw events are merged local baselines. Regenerated Beam IDL, configured ID and complete builders remain open. | Golden fixtures against Anchor; exact integer amounts; reject missing/stale accounts; construction separate from signing/sending. |
 | Read-only indexer and API | PR #16 owns local fixture backend; merged PR #17 supplies an unverified web adapter. Agree on versioned schema, slot/finality and cursor. No trading authority. | Replay/rollback, duplicate-event and malformed-account tests; bounded queries; fixtures labeled; no fabricated market metrics. |
 | Creator wallet and fee sharing | Curve creator, fee vault and sharing-config interfaces; retained Pump fee program is not yet rehosted for Beam. | Selection at creation, recipient/authority validation, claim preview and failure cases; local payout tests without real transfers; no implied arbitrary later wallet change. |
-| Charity registry and donation adapter | PR #14 owns local `backend/charity/` mocks; authorized Donate.gg relay/settlement and Beam fee configuration are still missing. | Registry provenance, consent and attribution tests; mocked donation/settlement/retry receipts; feature disabled without verified provider and recipient. |
+| Charity registry and donation adapter | PR #14 owns local `backend/charity/` mocks; the product design and any provider or allocation remain undecided. Archived donation source stays intact. | Compare clearly disclosed optional approaches; test registry provenance, consent, attribution and mocked receipts only after a design choice. No compulsory deduction or live donation. |
 | Callouts | PR #15 owns local `backend/callouts/` service; no on-chain callout ABI or live provider is evidenced. | Authenticated mock request, abuse/error handling and accessible UI tests; no paid or live callout action. |
 | Livestreaming and moderation | PR #21 owns the local `backend/livestream/` lifecycle; media provider, durable identity/moderation and player UI remain separate. No on-chain stream ABI is evidenced. | Local permission, lifecycle and retention tests; future mock player/accessibility tests; no live stream or provider account creation. |
 

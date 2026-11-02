@@ -14,6 +14,29 @@ invokes the pinned Raydium source processor. There is no Beam migration
 entrypoint or deployed-program validation. The modified Beam binary cannot be
 byte-identical to Pump's binary.
 
+## Product direction
+
+Beam aims to let users pair with arbitrary **compatible** Solana token mints
+and supported contracts after token-program, venue, account, and security
+validation. This is a desired capability, not implemented support for every
+Solana program or trading pair. Raydium AMM v4 remains the selected graduation
+venue and has its own mint compatibility limits.
+
+Stocks, tokenized stocks, and stock-linked pairings are outside current scope.
+Possible reconsideration has no committed plan or date. Charity support is an
+open redesign decision: the archived donation source stays intact, while no
+compulsory deduction, provider, recipient, or new allocation has been approved.
+A different, clearly disclosed optional approach remains possible.
+
+The product goal is a clearer, more transparent experience for newcomers and
+more reason to hold through honest utility and market design. Investigate
+misleading copycat launches, narrative-driven liquidity fragmentation, and
+incentives for opportunistic extraction. These concerns do not authorize
+ticker monopolies, launch restrictions, new fees, or holding rewards. Beam
+does not promise profitable launches, price support, loss prevention, or any
+particular token size. See the [feature ledger](docs/FEATURES.md) for what is
+actually implemented.
+
 ## Attribution / Upstream
 
 Beam vendors the community reconstruction of pump.fun's on-chain programs as an [archived pumpfun-source snapshot](upstream/pumpfun-source/README.md), pinned at commit `5703df02131ab944408e0cf679b4bef9c22e1a3d`. The [provenance record](docs/UPSTREAM.md) includes the historical repository URL.

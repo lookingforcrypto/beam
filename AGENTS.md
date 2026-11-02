@@ -63,6 +63,23 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   authorized providers; never imply their behavior is byte-identical. The
   pinned archive does contain separate donation-relay and Pump Fees programs;
   their presence is not Beam integration or charity authorization.
+- Preserve the desired ability to pair with arbitrary compatible Solana token
+  mints and supported contracts, subject to token-program, venue, account and
+  security validation. Do not claim every Solana program is a valid pair or
+  that general pairing is already implemented. Raydium AMM v4 remains the
+  selected graduation venue. Stocks, tokenized stocks and stock-linked pairs
+  are outside current scope; no future stock work is scheduled.
+- Charity is an open redesign decision. Keep the archived donation source and
+  existing capability evidence intact. Do not implement compulsory charity
+  deductions, choose a provider/recipient, or assign a new fee share without
+  a reviewed product decision. A clearly disclosed optional approach may be
+  considered later; no live donation is authorized.
+- Seek newcomer clarity and transparent risks. Investigate misleading copycat
+  launches, fragmented liquidity across similar narratives, and extraction
+  incentives without asserting competitor allegations as fact. Holding-friendly
+  design is a goal, not a return guarantee. Do not impose ticker exclusivity,
+  launch restrictions, fees or rewards from this direction alone, or promise
+  token performance or loss prevention.
 
 ## Validation and review
 
