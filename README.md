@@ -16,9 +16,9 @@ byte-identical to Pump's binary.
 
 ## Attribution / Upstream
 
-Beam uses the pump.fun ($PUMP) program work as published at [lalalune/pumpfun-source](https://github.com/lalalune/pumpfun-source), byte for byte, at commit [`5703df02131ab944408e0cf679b4bef9c22e1a3d`](https://github.com/lalalune/pumpfun-source/commit/5703df02131ab944408e0cf679b4bef9c22e1a3d).
+Beam vendors the community reconstruction of pump.fun's on-chain programs as an [archived pumpfun-source snapshot](upstream/pumpfun-source/README.md), pinned at commit `5703df02131ab944408e0cf679b4bef9c22e1a3d`. The [provenance record](docs/UPSTREAM.md) includes the historical repository URL.
 
-That publication is the completed community reconstruction of pump.fun's on-chain programs. pump.fun is the original program author. Shaw ([@lalalune](https://github.com/lalalune)) and the [pumpfun-source contributors](https://github.com/lalalune/pumpfun-source/graphs/contributors) published the reconstruction Beam pins. The archived MIT notice names "pump.fun contributors."
+The reconstruction is a community publication, not an official pump.fun release. The archived MIT notice names "pump.fun contributors." Beam preserves that notice with the source.
 
 `upstream/pumpfun-source` is that commit. `python3 scripts/check_fork.py` checks its 380 Git blobs against `upstream/files.json`. In the editable program `programs/beam`, the same command compares Pump Main (`programs/pump` at that commit) byte for byte: 62 retained files match, and four retained files are declared Beam edits. Five more files exist only in Beam. The whole `programs/beam` crate is that fork. Source byte identity is not a compiled Beam binary, a deployed pump.fun bytecode match, or runtime parity. Beam does not re-prove the reconstruction against deployed bytecode.
 
