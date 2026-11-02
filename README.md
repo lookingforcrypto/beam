@@ -20,6 +20,13 @@ Beam vendors the community reconstruction of pump.fun's on-chain programs as an 
 
 The reconstruction is a community publication, not an official pump.fun release. The archived MIT notice names "pump.fun contributors." Beam preserves that notice with the source.
 
+**Upstream availability (2 November 2026):** The historical public repository
+and pinned commit URLs return 404. We cannot tell whether the repository was
+deleted, made private, or moved. Beam's [local archive](upstream/pumpfun-source/README.md)
+preserves all 380 files in the pinned source-only snapshot, verified by path,
+mode, and Git blob hash. It is not a backup of all Git history, research
+artifacts, or GitHub discussions.
+
 `upstream/pumpfun-source` is that commit. `python3 scripts/check_fork.py` checks its 380 Git blobs against `upstream/files.json`. In the editable program `programs/beam`, the same command compares Pump Main (`programs/pump` at that commit) byte for byte: 62 retained files match, and four retained files are declared Beam edits. Five more files exist only in Beam. The whole `programs/beam` crate is that fork. Source byte identity is not a compiled Beam binary, a deployed pump.fun bytecode match, or runtime parity. Beam does not re-prove the reconstruction against deployed bytecode.
 
 The retained-file list, the declared edits, and the preserved license notices are in [Upstream attribution](docs/UPSTREAM.md). This repository has no root `LICENSE`. The archived notices stay with the snapshot. These documents do not add or choose a license.
