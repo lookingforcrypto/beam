@@ -93,6 +93,28 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   electric blue secondary and purple tertiary. Preserve accessible data and
   controls, local fonts, mobile layout and reduced-motion behavior. Theme work
   does not activate any product feature or financial mechanism.
+- King of the Hill is planned discovery, not an implemented or proven old-Pump
+  clone. Verify historical rule and threshold evidence before parity claims.
+  Define eligible tokens and curve stages, ranking metric and tie-breaks,
+  dethroning/refresh, graduation, data freshness/reorg handling and defenses
+  against manipulated inputs. Show an accessible, mobile retro featured area
+  only with clearly labeled sample data or authenticated live inputs. No paid
+  placement, invented leader, artificial migration delay, investment advice,
+  audited-safety implication or return guarantee follows from ranking.
+- Keep retro presentation tied to Beam's verified behavior, not a visual wrap
+  around PumpSwap. A plain-language "How it works" onboarding explanation
+  should use evidenced Beam configuration for graduation, LP custody/burn,
+  fees, launch allocations and availability. Do not copy historical threshold
+  numbers or assert no presale/team allocation, instant selling or LP burning
+  from a third-party screenshot.
+- Keep community discovery simple and give ongoing token communities a fair
+  chance to remain visible. Per-token comments or opt-in social features need
+  moderation, rate limits and anti-spam checks. Never use fake volume, wash
+  trades, automated buy bumps or raid spam to influence ranking or engagement;
+  historical status or follower counts alone do not establish legitimacy.
+  Preserve planned callouts without implying paid promotion is active. Disclose
+  a reward or airdrop's eligibility, funding and timing only after a reviewed
+  decision; the $BEAM flagship goal is not a promise to other communities.
 - The flagship $BEAM token is intended to launch on Beam, with a very high but
   unquantified share of eligible protocol revenue intended for buybacks and
   burns. No rate, mint, revenue denominator, budget, vault, authority or
