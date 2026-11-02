@@ -572,6 +572,28 @@ function App() {
           </div>
         </section>
 
+        <section
+          className="hill-preview container"
+          aria-labelledby="hill-preview-title"
+        >
+          <div className="hill-preview-copy">
+            <div className="eyebrow">
+              <span className="eyebrow-line" /> PLANNED DISCOVERY
+            </div>
+            <h2 id="hill-preview-title">King of the Hill</h2>
+            <p>
+              A featured place for a launch community is planned. Eligibility
+              and ranking rules still need verification; sample tokens below are
+              not ranked for this spot.
+            </p>
+          </div>
+          <div className="hill-preview-slot" aria-label="No live leader">
+            <span className="hill-preview-slot-label">FEATURED LEADER</span>
+            <strong>No live leader</strong>
+            <span>Awaiting verified rules and chain data</span>
+          </div>
+        </section>
+
         <section className="market-section container" id="explore">
           <div className="section-intro">
             <div>
