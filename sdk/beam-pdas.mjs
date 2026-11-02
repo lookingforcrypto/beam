@@ -324,6 +324,84 @@ export function legacyTradeRemainingAccounts({ mint, buybackFeeRecipient, global
   ];
 }
 
+// -------------------------------------------------- V2 trade accounts
+
+export const WSOL_MINT = 'So11111111111111111111111111111111111111112';
+// `buy_v2.rs` / `sell_v2.rs` derive `sharing_config` under this hard-coded
+// inherited Pump fee program ID, independently of the `fee_program` account.
+export const INHERITED_FEE_PROGRAM_ID = 'pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ';
+
+export const deriveSharingConfig = (mint) => findProgramAddress(
+  [text('sharing-config'), key(mint, 'mint')], INHERITED_FEE_PROGRAM_ID,
+);
+
+// Native-SOL curves only: the V2 handlers then require `quoteMint` = WSOL and
+// derive every quote ATA with SPL Token, while paying in lamports. The
+// returned object uses the Anchor field names that the draft
+// `beam-v2-trades.mjs` builders take. As with the legacy resolvers,
+// `creator`, `baseTokenProgram` (the mint's owner), the fee recipient, the
+// buyback recipient and the inherited fee accounts are caller inputs. Pass a
+// decoded Global to have recipient membership checked here.
+function resolveV2({
+  mint, user, creator, baseTokenProgram, feeRecipient, buybackFeeRecipient, feeConfig, feeProgram, global,
+}) {
+  key(user, 'user');
+  key(creator, 'creator');
+  key(buybackFeeRecipient, 'buybackFeeRecipient');
+  key(feeRecipient, 'feeRecipient');
+  for (const [name, value] of Object.entries({ feeConfig, feeProgram })) {
+    if (value === undefined) throw new TypeError(`${name} is unresolved for Beam and must be supplied explicitly`);
+    key(value, name);
+  }
+  if (global !== undefined && !global.buybackFeeRecipients?.includes(buybackFeeRecipient)) {
+    throw new RangeError('buybackFeeRecipient is not listed in Global.buyback_fee_recipients');
+  }
+  const base = tokenProgramOf(baseTokenProgram);
+  const quote = (owner) => getAssociatedTokenAddress({ owner, mint: WSOL_MINT, tokenProgram: TOKEN_PROGRAM_ID });
+  const bondingCurve = deriveBondingCurve(mint).address;
+  const creatorVault = deriveCreatorVault(creator).address;
+  const userVolumeAccumulator = deriveUserVolumeAccumulator(user).address;
+  return {
+    global: deriveGlobal().address,
+    baseMint: mint,
+    quoteMint: WSOL_MINT,
+    baseTokenProgram: base,
+    quoteTokenProgram: TOKEN_PROGRAM_ID,
+    associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+    feeRecipient,
+    associatedQuoteFeeRecipient: quote(feeRecipient),
+    buybackFeeRecipient,
+    associatedQuoteBuybackFeeRecipient: quote(buybackFeeRecipient),
+    bondingCurve,
+    associatedBaseBondingCurve: getAssociatedTokenAddress({ owner: bondingCurve, mint, tokenProgram: base }),
+    associatedQuoteBondingCurve: quote(bondingCurve),
+    user,
+    associatedBaseUser: getAssociatedTokenAddress({ owner: user, mint, tokenProgram: base }),
+    associatedQuoteUser: quote(user),
+    creatorVault,
+    associatedCreatorVault: quote(creatorVault),
+    sharingConfig: deriveSharingConfig(mint).address,
+    globalVolumeAccumulator: deriveGlobalVolumeAccumulator().address,
+    userVolumeAccumulator,
+    associatedUserVolumeAccumulator: quote(userVolumeAccumulator),
+    feeConfig,
+    feeProgram,
+    systemProgram: SYSTEM_PROGRAM_ID,
+    eventAuthority: deriveEventAuthority().address,
+    program: PROGRAM_ID,
+  };
+}
+
+export function resolveBuyV2Accounts(input) {
+  return resolveV2(input);
+}
+
+// `SellV2` has no `global_volume_accumulator`.
+export function resolveSellV2Accounts(input) {
+  const { globalVolumeAccumulator, ...accounts } = resolveV2(input);
+  return accounts;
+}
+
 // Returns a new instruction with `remaining` appended after the base metas.
 export function withRemainingAccounts(instruction, remaining) {
   if (!instruction || !Array.isArray(instruction.keys)) throw new TypeError('instruction must come from a build* helper');

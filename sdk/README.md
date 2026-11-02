@@ -130,3 +130,36 @@ fee-recipient list, and trailing padding. The fixture's receipt records its
 hashes. The decoder does not verify the account owner, address or freshness.
 Cashback-curve sells use a different remaining-account layout and are not
 modelled; Beam rejects cashback creation.
+
+### V2 trade accounts (native-SOL curves)
+
+`resolveBuyV2Accounts` and `resolveSellV2Accounts` return the 27 BuyV2 and 26
+SellV2 accounts. The keys are the Anchor field names that the draft
+`beam-v2-trades.mjs` builders take. On a native-SOL curve the handlers require
+`quoteMint` = WSOL and every quote ATA derived with SPL Token, while paying in
+lamports.
+
+The resolvers derive:
+
+- the curve, the creator vault and both volume accumulators;
+- the base and quote ATAs;
+- the event authority;
+- `sharing_config`. The program derives it under the hard-coded inherited
+  Pump fee program ID (`INHERITED_FEE_PROGRAM_ID`), not under the
+  `fee_program` account, so the resolvers do the same.
+
+These stay explicit inputs, as in the legacy resolvers:
+
+- `creator`
+- `baseTokenProgram` (the mint's owner)
+- the fee recipient and the buyback recipient. Membership of the buyback
+  recipient is checked when a decoded `Global` is passed.
+- `feeConfig` and `feeProgram`
+
+`fixtures/v2-accounts.json` is the unedited stdout of
+`tools/generate-v2-account-fixtures.rs`. It contains Anchor's own
+`accounts::BuyV2` / `accounts::SellV2` `to_account_metas` for Token-2022 and
+SPL Token base mints. The resolvers, laid out in that field order, reproduce
+every pubkey and privilege flag. The same derivations run against the real
+handlers in `tests/legacy-trade-runtime/tests/v2_trade.rs`, which is in a
+separate draft PR.

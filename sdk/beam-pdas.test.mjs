@@ -12,6 +12,7 @@ import {
   deriveMayhemGlobalParams, deriveMayhemSolVault, deriveMayhemState,
   resolveCreateAccounts, resolveCreateV2Accounts, resolveLegacyBuyAccounts, resolveLegacySellAccounts,
   deriveBondingCurveV2, legacyTradeRemainingAccounts, withRemainingAccounts,
+  resolveBuyV2Accounts, resolveSellV2Accounts, deriveSharingConfig, WSOL_MINT, INHERITED_FEE_PROGRAM_ID,
 } from './beam-pdas.mjs';
 import { decodeGlobal } from './beam-global.mjs';
 
@@ -186,4 +187,66 @@ test('legacy remaining accounts follow the handlers\' [bonding-curve-v2, buyback
   assert.equal(remaining[0].isWritable, false, 'metas are copied');
   assert.throws(() => withRemainingAccounts({}, remaining), TypeError);
   assert.throws(() => withRemainingAccounts(base, [{ pubkey: 'bad' }]), /remaining pubkey/);
+});
+
+// Anchor field order and privileges of `BuyV2` (programs/beam/src/buy_v2.rs);
+// `SellV2` is the same without `globalVolumeAccumulator`. The names match the
+// draft `beam-v2-trades.mjs` builder layout.
+const BUY_V2_ORDER = [
+  ['global', false, false], ['baseMint', false, false], ['quoteMint', false, false],
+  ['baseTokenProgram', false, false], ['quoteTokenProgram', false, false],
+  ['associatedTokenProgram', false, false], ['feeRecipient', false, true],
+  ['associatedQuoteFeeRecipient', false, true], ['buybackFeeRecipient', false, true],
+  ['associatedQuoteBuybackFeeRecipient', false, true], ['bondingCurve', false, true],
+  ['associatedBaseBondingCurve', false, true], ['associatedQuoteBondingCurve', false, true],
+  ['user', true, true], ['associatedBaseUser', false, true],
+  ['associatedQuoteUser', false, true], ['creatorVault', false, true],
+  ['associatedCreatorVault', false, true], ['sharingConfig', false, false],
+  ['globalVolumeAccumulator', false, false], ['userVolumeAccumulator', false, true],
+  ['associatedUserVolumeAccumulator', false, true], ['feeConfig', false, false],
+  ['feeProgram', false, false], ['systemProgram', false, false],
+  ['eventAuthority', false, false], ['program', false, false],
+];
+const SELL_V2_ORDER = BUY_V2_ORDER.filter(([name]) => name !== 'globalVolumeAccumulator');
+
+test('V2 resolvers reproduce Anchor BuyV2/SellV2 metas for both base token programs', () => {
+  const v2Bytes = readFileSync(new URL('./fixtures/v2-accounts.json', import.meta.url));
+  const v2 = JSON.parse(v2Bytes);
+  const v2Receipt = JSON.parse(readFileSync(new URL('./fixtures/v2-accounts.receipt.json', import.meta.url)));
+  assert.equal(createHash('sha256').update(v2Bytes).digest('hex'), v2Receipt.stdoutSha256);
+  const source = readFileSync(new URL('./tools/generate-v2-account-fixtures.rs', import.meta.url));
+  assert.equal(createHash('sha256').update(source).digest('hex'), v2Receipt.sourceSha256);
+  const i = v2.inputs;
+  assert.equal(i.feeProgram, INHERITED_FEE_PROGRAM_ID);
+  assert.equal(v2.cases.length, 4);
+  for (const c of v2.cases) {
+    const input = {
+      mint: i.mint, user: i.user, creator: i.creator, baseTokenProgram: c.baseTokenProgram,
+      feeRecipient: i.feeRecipient, buybackFeeRecipient: i.buybackFeeRecipient, feeConfig: i.feeConfig, feeProgram: i.feeProgram,
+    };
+    const buy = c.instruction === 'buyV2';
+    const accounts = buy ? resolveBuyV2Accounts(input) : resolveSellV2Accounts(input);
+    const order = buy ? BUY_V2_ORDER : SELL_V2_ORDER;
+    assert.deepEqual(Object.keys(accounts).sort(), order.map(([n]) => n).sort(), `${c.instruction} field set`);
+    const metas = order.map(([name, isSigner, isWritable]) => ({ pubkey: accounts[name], isSigner, isWritable }));
+    assert.deepEqual(metas, c.metas, `${c.instruction} / ${c.label}`);
+  }
+  assert.equal(resolveBuyV2Accounts({ ...i, baseTokenProgram: TOKEN_2022_PROGRAM_ID }).quoteMint, WSOL_MINT);
+});
+
+test('V2 resolvers keep chain-state and inherited inputs explicit', () => {
+  const input = { mint, user, creator, baseTokenProgram: TOKEN_2022_PROGRAM_ID, feeRecipient: SYNTHETIC.feeRecipient, buybackFeeRecipient: user, ...SYNTHETIC };
+  for (const missing of ['feeConfig', 'feeProgram']) {
+    const partial = { ...input };
+    delete partial[missing];
+    assert.throws(() => resolveBuyV2Accounts(partial), new RegExp(`${missing} is unresolved`));
+  }
+  assert.throws(() => resolveSellV2Accounts({ ...input, buybackFeeRecipient: undefined }), /buybackFeeRecipient/);
+  assert.throws(() => resolveBuyV2Accounts({ ...input, baseTokenProgram: SYSTEM_PROGRAM_ID }), /SPL Token or Token-2022/);
+  assert.throws(() => resolveBuyV2Accounts({ ...input, global: { buybackFeeRecipients: [creator] } }), /not listed/);
+  assert.equal(resolveBuyV2Accounts({ ...input, global: { buybackFeeRecipients: [user] } }).buybackFeeRecipient, user);
+  assert.equal(deriveSharingConfig(mint).address, resolveSellV2Accounts(input).sharingConfig);
+  assert.equal(resolveBuyV2Accounts({ ...input, feeProgram: creator }).sharingConfig, deriveSharingConfig(mint).address,
+    'sharing_config uses the hard-coded inherited fee program, not the fee_program input');
+  assert.equal('globalVolumeAccumulator' in resolveSellV2Accounts(input), false);
 });
