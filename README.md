@@ -79,8 +79,9 @@ The retained-file list, the declared edits, and the preserved license notices ar
 Choose one bounded gap from the [task ledger](docs/TASKS.md), check open PRs for
 overlap, and record the base commit, affected paths, tests, and remaining risks.
 The [contributor guide](CONTRIBUTING.md) gives commands and the maintainer
-review sequence. A passing mock or host test is evidence for that narrow case,
-not proof of a deployable launchpad.
+review sequence, including [fork-to-PR steps](CONTRIBUTING.md#contribute-from-a-fork)
+for people without direct repository write access. A passing mock or host test
+is evidence for that narrow case, not proof of a deployable launchpad.
 
 At the 1 November 2026 maintainer check, Beam's
 [Slop listing](https://slop.cash/projects/beam) was paused with a security
@@ -227,5 +228,5 @@ for stacked PRs and exact-head CI. Suspected exploitable issues belong in the
 current private security-report channel, never a public issue or PR.
 
 Beam has no repository-root license yet. Archived sources retain their own
-licenses; maintainers must clarify terms for new Beam code before inviting
+licenses; maintainers must clarify terms for new Beam code before accepting
 substantial external submissions.

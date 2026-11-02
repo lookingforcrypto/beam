@@ -22,6 +22,8 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
 3. Claim one bounded lane after checking its open PRs. Record scope, base
    commit, intended behavior, tests, and remaining risks in the PR description.
    Check `docs/TASKS.md` and active pull requests to avoid duplicate work.
+   External contributors can follow the [fork-to-PR guide](CONTRIBUTING.md#contribute-from-a-fork)
+   without direct write access to Beam.
 4. Work in a separate branch. Do not rewrite another contributor's branch or
    merge competing architectures or fee policies without a reviewed decision.
 5. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
