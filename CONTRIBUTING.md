@@ -14,6 +14,37 @@ private credential, or live network is needed for the checks below. The
 [Slop status note](docs/STATUS.md#contribution-and-security-status) is a dated
 observation, not permission to begin a listed task or merge a PR.
 
+## Contribute from a fork
+
+Beam is public and forkable. You do not need write access to the canonical
+repository. Use GitHub's **Fork** action on
+[`shawkkkkk/beam`](https://github.com/shawkkkkk/beam), then clone your fork:
+
+```sh
+git clone https://github.com/YOUR_GITHUB_USER/beam.git
+cd beam
+git remote add upstream https://github.com/shawkkkkk/beam.git
+git fetch upstream
+git switch main
+git merge --ff-only upstream/main
+git switch -c YOUR_TOPIC_BRANCH
+```
+
+Read the applicable [AGENTS.md](AGENTS.md) instructions, check the current
+[task ledger](docs/TASKS.md), open PRs, and remote branches, then coordinate
+one unclaimed lane before editing. If your fork's `main` has diverged, resolve
+that deliberately; do not force-push someone else's work. Run the relevant
+checks below and record the exact tested commit, commands, results, changed
+paths, dependencies, risks and evidence limits in your PR description.
+
+Push your topic branch to your fork with
+`git push -u origin YOUR_TOPIC_BRANCH`, then open a PR from that branch into
+`shawkkkkk/beam:main`, or into the declared dependency branch for a reviewed
+stack. A maintainer reviews the combined tree and exact-head CI before merge;
+passing checks or a Slop task status never grants merge approval. Keep
+unresolved work in draft. The root-license caveat below still applies; a fork
+does not create a license grant for Beam-authored files.
+
 ## Choose a scoped change
 
 Check open pull requests and remote branches before beginning. [PR #1](https://github.com/shawkkkkk/beam/pull/1)
@@ -43,7 +74,7 @@ does not include Pump's proprietary website or service backends.
 There is currently no repository-root license file. The licenses inside the
 upstream snapshots apply to those snapshots; they do not establish a license
 for every new Beam file. Maintainers need to clarify the project's own license
-and contribution terms before inviting substantial external submissions.
+and contribution terms before accepting substantial external code.
 
 ## Check the change
 

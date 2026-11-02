@@ -4,8 +4,23 @@ This ledger records scope and evidence checked through 2 November 2026. Check th
 branches and pull requests before starting work; status may change. These are
 contribution scopes, not paid bounties. Beam's Slop listing was paused with a
 security scan queued on 1 November; its state could not be verified on
-2 November. Do not claim clearance, reward funding or authorization to resume
-feature work from this ledger. See [contribution status](STATUS.md#contribution-and-security-status).
+2 November. The maintainer has separately resumed cloud development; do not
+infer Slop clearance or reward funding from that authorization. See
+[contribution status](STATUS.md#contribution-and-security-status).
+
+## Active review overlaps, 2 November 2026
+
+This is a dated dependency map, not a merge-readiness judgment. Verify the
+current head, base, diff and exact-head checks before claiming a lane.
+
+| Open work | Ownership boundary | Review dependency or current limit |
+| --- | --- | --- |
+| [#36](https://github.com/shawkkkkk/beam/pull/36) and stacked [#49](https://github.com/shawkkkkk/beam/pull/49) | Retired PumpSwap interfaces, AMM v4 replacement routing, creator/CTO/donation rights in `programs/beam/`. | #36 currently conflicts with `main`; #49 is based on #36. #49's creator payout from the 42-bps community share is a proposal, not an approved funding choice. Review combined source, IDL, runtime and account authority before integration. |
+| [#39](https://github.com/shawkkkkk/beam/pull/39) | Generated IDL and SDK fixtures. | Reconcile the IDL with final integrated source and error messages; historical PumpSwap identifiers in a reference catalog are not operational routing. |
+| [#16](https://github.com/shawkkkkk/beam/pull/16) → [#56](https://github.com/shawkkkkk/beam/pull/56) | Fixture indexer and a stacked rollback/schema-boundary test under `backend/indexer/`. | The fixture query is not merged web adapter #17's authenticated `IndexedPage`; signatures, metadata and mint-to-curve association remain unavailable. #56 adds no live ingestion. |
+| [#45](https://github.com/shawkkkkk/beam/pull/45), [#46](https://github.com/shawkkkkk/beam/pull/46), [#47](https://github.com/shawkkkkk/beam/pull/47) | PDA/ATA SDK derivation, local legacy quote helpers and native-SOL local-bank trades. | Coordinate fixtures and exact contract accounts. Hosted workflows on their latest heads were `action_required` at this checkpoint, not passing tests. |
+| [#48](https://github.com/shawkkkkk/beam/pull/48), [#53](https://github.com/shawkkkkk/beam/pull/53) → [#54](https://github.com/shawkkkkk/beam/pull/54) → [#55](https://github.com/shawkkkkk/beam/pull/55) | Preview watchlist bound; product/contributor guidance; stacked retro brand and static King of the Hill panel. | #48 has held `action_required` workflows. #53–#55 remain drafts in dependency order. #55 says no live leader; ranking and community services are not implemented. |
+| [#51](https://github.com/shawkkkkk/beam/pull/51) | `buy_v2.rs` shared-reference Clippy fix. | Its latest workflows are `action_required`; do not report the contributor's local checks as hosted CI results. |
 
 ## Current work and ownership
 
@@ -160,7 +175,11 @@ precise specification and isolated adversarial tests.
    CPMM candidate with a verified AMM v4 adapter. Specify who can withdraw
    principal and collect ongoing fees, then test those permissions. Current
    CPMM LP burning supplies no recurring LP-fee income. Keep migration disabled
-   until the design and tests resolve this.
+   until the design and tests resolve this. Assess initial and continuing pool
+   depth, LP ownership and withdrawal control, lock/burn tradeoffs, slippage
+   and price impact at comparable trade sizes, and post-graduation liquidity.
+   Historical Raydium/PumpSwap chart comparisons need matched periods and pool
+   evidence before any causal or durability claim.
 3. **Raydium AMM v4 migration validation.** Build on PR #38's pinned-source
    local CPI fixture to exercise the actual Beam migration handler, pool identity,
    config/mint/vault/reserve deltas, fee liabilities, donated balances,
@@ -178,13 +197,25 @@ precise specification and isolated adversarial tests.
    If creator payouts use that allocation, divide only its remainder. A 50/50
    division of the available amount is a provisional test setting. Holder
    eligibility, flagship mint, recipients, and execution policy remain to be
-   specified. Do not add automatic market orders or claim perpetual revenue.
+   specified. The flagship $BEAM token is intended to launch on Beam; a very
+   high but unquantified share of eligible protocol revenue is intended for
+   buybacks and burns. Define the revenue base and reconcile it with 42/5/3,
+   creator funding and holder rewards before choosing any rate. Do not count
+   volume or third-party fees as spendable revenue, double-count allocated
+   funds, add automatic market orders or claim perpetual revenue or returns.
+   Separately account for support of existing launched-token communities,
+   creator payouts, operations, flagship spending and any disclosed promotion;
+   the same receipt cannot fund two commitments. The balance among these uses
+   and any callout spending policy remain undecided. Do not ban callouts or
+   promise token survival.
 6. **Feature parity outside the contract.** Use the [feature matrix](FEATURES.md)
    to distinguish on-chain interfaces from missing product services. Build
-   authorized creator-wallet, charity/donation, callout, and livestream
-   experiences without copying unavailable proprietary backends or presenting
-   sample data as live. Keep external disbursements and streams disabled until
-   the service, permissions, and tests exist.
+   authorized creator-wallet, callout, and livestream experiences without
+   copying unavailable proprietary backends or presenting sample data as live.
+   Charity/donation design is open; do not choose compulsory deductions, a
+   provider or an allocation while reviewing its disabled mock. Keep external
+   disbursements and streams disabled until the service, permissions, and tests
+   exist.
 7. **Complete PumpSwap removal without losing features.** Audit active Beam
    handlers, quote-chain paths, creator-fee/sharing/CTO instructions,
    donation creation/collection, SDK and UI for PumpSwap program IDs, CPIs,
@@ -205,11 +236,13 @@ behavior and interface tests, not recovered proprietary web/backend bytes.
 
 | Lane | Interface and dependency | Local acceptance evidence |
 | --- | --- | --- |
-| Website and UI | Merged PR #17 provides a read-only web adapter; PR #6's `web/` remains a sample preview. Additional UI requires typed state from a verified chain data source. | Responsive create/discovery/detail flows; keyboard/modal/storage tests; visible freshness and unavailable states; no preview RPC/signature attempt. |
+| Website and UI | Merged PR #17 provides a read-only web adapter; PR #6's `web/` remains a sample preview. Additional UI requires typed state from a verified chain data source. Retro styling must explain Beam's selected AMM v4 path rather than present PumpSwap as its engine. | Responsive create/discovery/detail flows; keyboard/modal/storage tests; visible freshness and unavailable states; no preview RPC/signature attempt. Add factual "How it works" onboarding sourced from verified Beam graduation, LP custody/burn, fees, launch allocations and availability; do not import screenshot thresholds or unsupported selling/allocation promises. |
+| King of the Hill discovery | Unclaimed planned lane under `web/` and the read-only indexer/API. First document evidenced historical mechanics; do not guess old thresholds or add a migration wait. Coordinate with the website/indexer owners before edits. | Specify eligible token and curve stage, authenticated ranking metric and tie-breaks, dethroning/refresh, graduation, freshness/reorg and manipulation-resistant inputs. Test deterministic ranking and turnover plus an accessible mobile retro featured area. Label fixtures; no invented live leader, paid placement, investment advice, audited-safety or return claim. |
+| Per-token discussion and ongoing-community discovery | Planned, unclaimed `web/` plus moderated backend lane; coordinate with callout/indexer owners. Do not equate flagship plans with rewards for every token. | Define opt-in identity, moderation, rate limits, anti-spam and accessible comments. Test abuse and stale/removed content; avoid synthetic trading/engagement bumps or raid spam. Any reward/airdrop display requires independently approved eligibility, funding and timing. |
 | Wallet SDK and IDL | PR #13 creator remains draft; PR #18 CreateV2 and PR #20 raw events are merged local baselines. Regenerated Beam IDL, configured ID and complete builders remain open. | Golden fixtures against Anchor; exact integer amounts; reject missing/stale accounts; construction separate from signing/sending. |
 | Read-only indexer and API | PR #16 owns local fixture backend; merged PR #17 supplies an unverified web adapter. Agree on versioned schema, slot/finality and cursor. No trading authority. | Replay/rollback, duplicate-event and malformed-account tests; bounded queries; fixtures labeled; no fabricated market metrics. |
 | Creator wallet and fee sharing | Curve creator, fee vault and sharing-config interfaces; retained Pump fee program is not yet rehosted for Beam. | Selection at creation, recipient/authority validation, claim preview and failure cases; local payout tests without real transfers; no implied arbitrary later wallet change. |
-| Charity registry and donation adapter | PR #14 owns local `backend/charity/` mocks; authorized Donate.gg relay/settlement and Beam fee configuration are still missing. | Registry provenance, consent and attribution tests; mocked donation/settlement/retry receipts; feature disabled without verified provider and recipient. |
+| Charity registry and donation adapter | PR #14 owns local `backend/charity/` mocks; the product design and any provider or allocation remain undecided. Archived donation source stays intact. | Compare clearly disclosed optional approaches; test registry provenance, consent, attribution and mocked receipts only after a design choice. No compulsory deduction or live donation. |
 | Callouts | PR #15 owns local `backend/callouts/` service; no on-chain callout ABI or live provider is evidenced. | Authenticated mock request, abuse/error handling and accessible UI tests; no paid or live callout action. |
 | Livestreaming and moderation | PR #21 owns the local `backend/livestream/` lifecycle; media provider, durable identity/moderation and player UI remain separate. No on-chain stream ABI is evidenced. | Local permission, lifecycle and retention tests; future mock player/accessibility tests; no live stream or provider account creation. |
 
