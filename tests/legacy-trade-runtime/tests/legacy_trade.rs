@@ -175,3 +175,110 @@ async fn trades_reject_missing_remaining_accounts_and_substituted_recipients() {
     assert_eq!(custom_error(b.send(&[b.buy(0, u64::MAX, false)], &[]).await), code(PumpError::BuyZeroAmount));
     assert_eq!(custom_error(b.send(&[b.sell(0, 0)], &[]).await), code(PumpError::SellZeroAmount));
 }
+
+// ---------------------------------------------------------------- creator fees
+
+impl Bank {
+    /// Signed only by the test payer: neither the creator nor the trader signs.
+    async fn send_as_third_party(&mut self, instruction: Instruction) -> Result<(), solana_program_test::BanksClientError> {
+        let blockhash = self.ctx.banks_client.get_latest_blockhash().await.unwrap();
+        let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(
+            &[instruction], Some(&self.ctx.payer.pubkey()), &[&self.ctx.payer], blockhash,
+        );
+        self.ctx.banks_client.process_transaction(tx).await
+    }
+
+    fn collect_creator_fee(&self, creator: Pubkey, vault_creator: Pubkey) -> Instruction {
+        Instruction {
+            program_id: beam_program::ID,
+            accounts: beam_program::accounts::CollectCreatorFee {
+                creator, creator_vault: creator_vault(&vault_creator), system_program: system_program::ID,
+                event_authority: event_authority(), program: beam_program::ID,
+            }.to_account_metas(None),
+            data: beam_program::instruction::CollectCreatorFee {}.data(),
+        }
+    }
+}
+
+/// The creator wallet chosen at `create_v2` (distinct from the trader who
+/// creates and trades) accrues creator fees in its vault; anyone may trigger
+/// `collect_creator_fee`, and the payout always lands in that wallet.
+#[tokio::test]
+async fn creator_fees_accrue_in_the_vault_and_pay_out_to_the_selected_wallet() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    assert_ne!(b.creator, b.user.pubkey(), "the creator wallet is not the signer");
+    let (creator, vault) = (b.creator, creator_vault(&b.creator));
+    let rent0 = Rent::default().minimum_balance(0);
+
+    let curve = b.curve().await;
+    let amount = 35_000_000_000_000;
+    let quote = u64::try_from(buy_quote(&curve, amount).unwrap()).unwrap();
+    let buy_fee = expected_fees(quote).creator;
+    b.send(&[b.buy(amount, u64::MAX, false)], &[]).await.expect("buy");
+    let bought = b.curve().await;
+    let gross = u64::try_from(bought.sell_quote(amount / 2).unwrap()).unwrap();
+    let sell_fee = expected_fees(gross).creator;
+    b.send(&[b.sell(amount / 2, 0)], &[]).await.expect("sell");
+    assert_eq!(b.lamports(vault).await, rent0 + buy_fee + sell_fee, "vault holds rent plus both creator fees");
+    assert_eq!(b.lamports(creator).await, 0, "nothing is paid out before collection");
+
+    // A third party (the test payer: not the creator, not the trader) triggers the payout.
+    let trader_before = b.lamports(b.user.pubkey()).await;
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("collect");
+    assert_eq!(b.lamports(creator).await, buy_fee + sell_fee, "the selected wallet receives every accrued fee");
+    assert_eq!(b.lamports(vault).await, rent0, "the vault keeps exactly its rent-exempt minimum");
+    assert_eq!(b.lamports(b.user.pubkey()).await, trader_before, "the trader receives nothing");
+
+    // Collecting again is a no-op, and a vault derived for another key is rejected.
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("empty collect is a no-op");
+    assert_eq!(b.lamports(creator).await, buy_fee + sell_fee);
+    let seeds: u32 = anchor_lang::error::ErrorCode::ConstraintSeeds.into();
+    assert_eq!(custom_error(b.send_as_third_party(b.collect_creator_fee(b.stranger, creator)).await), seeds,
+        "a vault cannot be redirected to another wallet");
+}
+
+/// A payout that would leave a new creator wallet below rent exemption is
+/// deferred, not lost: the lamports stay in the vault until enough accrues.
+#[tokio::test]
+async fn small_creator_fees_wait_in_the_vault_until_they_cover_rent() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    let (creator, vault) = (b.creator, creator_vault(&b.creator));
+    let rent0 = Rent::default().minimum_balance(0);
+
+    let curve = b.curve().await;
+    let small = 1_000_000_000; // a tiny buy whose creator fee is far below rent exemption
+    let fee = expected_fees(u64::try_from(buy_quote(&curve, small).unwrap()).unwrap()).creator;
+    assert!(fee < rent0);
+    b.send(&[b.buy(small, u64::MAX, false)], &[]).await.expect("small buy");
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("deferred collect succeeds");
+    assert_eq!(b.lamports(creator).await, 0, "no payout below the new account's rent minimum");
+    assert_eq!(b.lamports(vault).await, rent0 + fee, "the fee stays in the vault");
+
+    let bigger = 35_000_000_000_000;
+    let curve = b.curve().await;
+    let fee2 = expected_fees(u64::try_from(buy_quote(&curve, bigger).unwrap()).unwrap()).creator;
+    b.send(&[b.buy(bigger, u64::MAX, false)], &[]).await.expect("larger buy");
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("collect");
+    assert_eq!(b.lamports(creator).await, fee + fee2, "the deferred fee is paid with the next one");
+    assert_eq!(b.lamports(vault).await, rent0);
+}
+
+/// A creator account owned by the inherited fee program (a vault migrated to a
+/// sharing config) cannot be paid through `collect_creator_fee`.
+#[tokio::test]
+async fn collection_is_refused_for_a_sharing_config_creator() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    b.send(&[b.buy(35_000_000_000_000, u64::MAX, false)], &[]).await.expect("buy");
+    let creator = b.creator;
+    let vault_before = b.lamports(creator_vault(&creator)).await;
+    b.ctx.set_account(&creator, &solana_sdk::account::AccountSharedData::new(Rent::default().minimum_balance(8), 8, &FEE_PROGRAM));
+    assert_eq!(custom_error(b.send_as_third_party(b.collect_creator_fee(creator, creator)).await),
+        code(PumpError::UnableToDistributeCreatorVaultMigratedToSharingConfig));
+    assert_eq!(b.lamports(creator_vault(&creator)).await, vault_before, "the vault is untouched");
+}

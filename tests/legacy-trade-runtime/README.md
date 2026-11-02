@@ -94,6 +94,24 @@ differ.
    cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's/^@@//p'
    ```
 
+8. **Creator fee collection (`tests/legacy_trade.rs`).**
+   - `create_v2` takes the creator wallet as an argument. In the tests it is
+     a wallet distinct from the signing trader.
+   - Legacy buys and sells accrue the creator fee in the
+     `["creator-vault", creator]` PDA.
+   - `collect_creator_fee` needs no signer. In the test it is triggered by a
+     third party, the test payer, and it pays everything above the vault's
+     rent-exempt minimum to that creator wallet, never to the caller. A
+     second call is a no-op. A vault derived for another wallet fails with
+     `ConstraintSeeds`.
+   - **Small fees wait in the vault.** A fee too small to make a new creator
+     account rent-exempt is not paid out and is not lost: it stays in the
+     vault and is paid with the next larger accrual.
+   - A creator account owned by the inherited fee program (a vault migrated
+     to a sharing config) is refused with
+     `UnableToDistributeCreatorVaultMigratedToSharingConfig`, and the vault
+     is left untouched.
+
 ## Remaining accounts
 
 Legacy `buy` and `sell` read `remaining_accounts[0]` as the
@@ -107,7 +125,8 @@ return only the base metas, so a client must append both accounts.
 - Real fee-program behaviour, fee tiers by market cap, or Beam's planned
   0.50% / 42-5-3 policy.
 - Whitelist-PDA trades, cashback, holder rewards, Mayhem, non-SOL quote
-  mints, Token-2022 transfer fees, V3 handlers, sharing configs and volume
-  tracking.
+  mints, Token-2022 transfer fees, V3 handlers, sharing configs and their
+  `distribute_creator_fees` paths, `collect_creator_fee_v2`, `set_creator`,
+  and volume tracking.
 - Migration after completion, an SBF binary, compute-unit limits or a
   deployed program.
