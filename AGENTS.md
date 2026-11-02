@@ -8,10 +8,11 @@ additional archive restrictions. Do not alter the pinned archive for Beam work.
 
 As of the 1 November 2026 maintainer check, Beam's Slop listing was paused
 with a security scan queued. Its current state was not verifiable on
-2 November 2026. Check the live listing and maintainer direction before
-starting feature work or treating a task as available. Documentation and
-review activity can continue within the scope approved by maintainers;
-neither a Slop state change nor automatic task closure approves a GitHub PR.
+2 November 2026. The maintainer has since explicitly resumed Beam development
+in the cloud workspace; this does **not** establish Slop clearance or make a
+listed task available. Check current PR ownership and maintainer direction
+before work. Neither a Slop state change nor automatic task closure approves
+a GitHub PR.
 
 1. Read `README.md`, `docs/STATUS.md`, `docs/ECONOMICS.md`, `docs/TASKS.md`,
    and `CONTRIBUTING.md`. Check the working tree, remote branches, and open

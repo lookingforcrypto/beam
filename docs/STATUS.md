@@ -73,8 +73,9 @@ At the last maintainer check on 1 November 2026, Beam's
 [Slop listing](https://slop.cash/projects/beam) was paused with a security
 scan queued. The page was inaccessible to this documentation review on
 2 November 2026, so its current scan and listing status are **unknown here**.
-Verify the live status and maintainer direction before claiming an available
-Slop task, clearance, reward funding or a changed development scope. A Slop
+The maintainer subsequently resumed Beam development in the cloud workspace;
+that direction is separate from Slop scan clearance. Verify the live listing
+before claiming an available Slop task, clearance or reward funding. A Slop
 task's automatic closure does not approve or merge a GitHub pull request.
 The repository still has no root license; maintainers must clarify
 contribution terms before inviting substantial external submissions.
