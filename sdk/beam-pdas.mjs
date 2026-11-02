@@ -298,3 +298,36 @@ export function resolveLegacyBuyAccounts(input) {
 export function resolveLegacySellAccounts(input) {
   return resolveTrade(input);
 }
+
+// ------------------------------------------------ legacy remaining accounts
+
+// `check_bonding_curve_v2` (programs/beam/src/sell.rs) compares
+// remaining_accounts[0] with this PDA when a creator fee is charged.
+export const deriveBondingCurveV2 = (mint) => beam([text('bonding-curve-v2'), key(mint, 'mint')]);
+
+// Legacy `buy` and `sell` on a non-cashback curve read remaining_accounts as
+// [bonding-curve-v2 PDA, buyback fee recipient]; the buyback recipient
+// receives lamports and must be listed in `Global.buyback_fee_recipients`.
+// Choosing which listed recipient to use is the caller's decision; pass a
+// decoded Global (sdk/beam-global.mjs) to have membership checked here.
+// Beam rejects cashback creation; cashback sells use a different layout and
+// are not modelled.
+export function legacyTradeRemainingAccounts({ mint, buybackFeeRecipient, global }) {
+  key(buybackFeeRecipient, 'buybackFeeRecipient');
+  if (buybackFeeRecipient === SYSTEM_PROGRAM_ID) throw new RangeError('buybackFeeRecipient must be nonzero');
+  if (global !== undefined && !global.buybackFeeRecipients?.includes(buybackFeeRecipient)) {
+    throw new RangeError('buybackFeeRecipient is not listed in Global.buyback_fee_recipients');
+  }
+  return [
+    { pubkey: deriveBondingCurveV2(mint).address, isSigner: false, isWritable: false },
+    { pubkey: buybackFeeRecipient, isSigner: false, isWritable: true },
+  ];
+}
+
+// Returns a new instruction with `remaining` appended after the base metas.
+export function withRemainingAccounts(instruction, remaining) {
+  if (!instruction || !Array.isArray(instruction.keys)) throw new TypeError('instruction must come from a build* helper');
+  if (!Array.isArray(remaining)) throw new TypeError('remaining must be an array of account metas');
+  for (const meta of remaining) key(meta?.pubkey, 'remaining pubkey');
+  return { ...instruction, keys: [...instruction.keys, ...remaining.map((meta) => ({ ...meta }))] };
+}

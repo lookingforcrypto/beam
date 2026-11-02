@@ -11,7 +11,9 @@ import {
   deriveBondingCurve, deriveCreatorVault, deriveUserVolumeAccumulator, deriveMetadata,
   deriveMayhemGlobalParams, deriveMayhemSolVault, deriveMayhemState,
   resolveCreateAccounts, resolveCreateV2Accounts, resolveLegacyBuyAccounts, resolveLegacySellAccounts,
+  deriveBondingCurveV2, legacyTradeRemainingAccounts, withRemainingAccounts,
 } from './beam-pdas.mjs';
+import { decodeGlobal } from './beam-global.mjs';
 
 const fixtureBytes = readFileSync(new URL('./fixtures/pdas.json', import.meta.url));
 const fixture = JSON.parse(fixtureBytes);
@@ -76,7 +78,7 @@ test('named Beam and Mayhem derivations match Anchor seeds', () => {
     bondingCurve: deriveBondingCurve(mint), creatorVault: deriveCreatorVault(creator),
     userVolumeAccumulator: deriveUserVolumeAccumulator(user), metadata: deriveMetadata(mint),
     mayhemGlobalParams: deriveMayhemGlobalParams(), mayhemSolVault: deriveMayhemSolVault(),
-    mayhemState: deriveMayhemState(mint),
+    mayhemState: deriveMayhemState(mint), bondingCurveV2: deriveBondingCurveV2(mint),
   };
   assert.deepEqual(Object.keys(cases).sort(), Object.keys(expectedPda).sort());
   for (const [name, actual] of Object.entries(cases)) {
@@ -157,4 +159,31 @@ test('resolved legacy trade accounts keep unresolved fee accounts explicit', () 
   const buy = resolveLegacyBuyAccounts({ mint, user, creator, tokenProgram: TOKEN_PROGRAM_ID, ...SYNTHETIC });
   assert.equal(buy.userVolumeAccumulator, expectedPda.userVolumeAccumulator.address);
   assert.equal(buy.globalVolumeAccumulator, expectedPda.globalVolumeAccumulator.address);
+});
+
+test('legacy remaining accounts follow the handlers\' [bonding-curve-v2, buyback] layout', () => {
+  const globalFixture = JSON.parse(readFileSync(new URL('./fixtures/global.json', import.meta.url)));
+  const global = decodeGlobal(Uint8Array.from(Buffer.from(globalFixture.cases.find((c) => c.name === 'distinct').dataHex, 'hex')));
+  const buyback = global.buybackFeeRecipients[3];
+  const remaining = legacyTradeRemainingAccounts({ mint, buybackFeeRecipient: buyback, global });
+  assert.deepEqual(remaining, [
+    { pubkey: expectedPda.bondingCurveV2.address, isSigner: false, isWritable: false },
+    { pubkey: buyback, isSigner: false, isWritable: true },
+  ]);
+  assert.throws(() => legacyTradeRemainingAccounts({ mint, buybackFeeRecipient: global.feeRecipient, global }), /not listed/);
+  assert.throws(() => legacyTradeRemainingAccounts({ mint, buybackFeeRecipient: SYSTEM_PROGRAM_ID }), /nonzero/);
+  assert.throws(() => legacyTradeRemainingAccounts({ mint }), /buybackFeeRecipient/);
+  assert.equal(legacyTradeRemainingAccounts({ mint, buybackFeeRecipient: user })[1].pubkey, user, 'membership check is optional without a Global');
+
+  const accounts = resolveLegacyBuyAccounts({ mint, user, creator, tokenProgram: TOKEN_2022_PROGRAM_ID, ...SYNTHETIC });
+  const base = buildBuy(accounts, { amount: 1, maxSolCost: 2, trackVolume: false, partialFill: false });
+  const full = withRemainingAccounts(base, remaining);
+  assert.equal(full.keys.length, 18);
+  assert.deepEqual(full.keys.slice(0, 16), base.keys);
+  assert.deepEqual(full.keys.slice(16), remaining);
+  assert.equal(base.keys.length, 16, 'the base instruction is not mutated');
+  full.keys[16].isWritable = true;
+  assert.equal(remaining[0].isWritable, false, 'metas are copied');
+  assert.throws(() => withRemainingAccounts({}, remaining), TypeError);
+  assert.throws(() => withRemainingAccounts(base, [{ pubkey: 'bad' }]), /remaining pubkey/);
 });

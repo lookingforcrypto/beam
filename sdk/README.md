@@ -97,3 +97,36 @@ Boundaries:
   must supply it.
 - No RPC, wallet, signing or transaction submission is present. The program
   ID is still the undeployed development placeholder.
+
+### Legacy trade remaining accounts and `Global`
+
+Legacy `buy` and `sell` need two accounts after the base metas: the
+`["bonding-curve-v2", mint]` PDA and a buyback recipient listed in
+`Global.buyback_fee_recipients`, which is writable. `buildBuy` / `buildSell`
+return only the base metas. `legacyTradeRemainingAccounts` builds the pair,
+and `withRemainingAccounts` appends it to a built instruction without
+mutating it. Without both accounts, the handler fails with
+`BuybackFeeRecipientMissing`. `tests/legacy-trade-runtime` shows this by
+running the real handler in a local bank. That test is in a separate draft
+PR.
+
+`beam-global.mjs` decodes the `Global` account: 8 discriminator bytes and
+1,080 bytes of fields, with trailing bytes ignored as Anchor ignores them. It
+also mirrors the two recipient checks:
+
+- `isAuthorizedFeeRecipient` mirrors `validate_fee_recipient`. The program
+  looks up `fee_recipients` with Rust's `binary_search`. On an unsorted list
+  that result cannot be predicted, so a listed key in an unsorted list throws
+  instead of guessing.
+- `isAuthorizedBuybackFeeRecipient` mirrors
+  `Global::validate_buyback_fee_recipient`.
+
+Which listed buyback recipient a client uses is left to the caller.
+
+`fixtures/global.json` is the unedited stdout of
+`tools/generate-global-fixtures.rs`. It contains Anchor `AccountSerialize`
+bytes for four synthetic cases: zero, distinct values, an unsorted
+fee-recipient list, and trailing padding. The fixture's receipt records its
+hashes. The decoder does not verify the account owner, address or freshness.
+Cashback-curve sells use a different remaining-account layout and are not
+modelled; Beam rejects cashback creation.

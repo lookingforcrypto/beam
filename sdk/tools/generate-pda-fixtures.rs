@@ -6,7 +6,9 @@
 //!
 //! Seeds below restate the Anchor constraints on `Create`, `LegacyBuy`,
 //! `LegacySell` (programs/beam/src/lib.rs) and `CreateV2`
-//! (programs/beam/src/create_v2.rs); program IDs come from the crate itself.
+//! (programs/beam/src/create_v2.rs), plus the `bonding-curve-v2` remaining
+//! account checked by `check_bonding_curve_v2` (programs/beam/src/sell.rs);
+//! program IDs come from the crate itself.
 use anchor_lang::solana_program::{hash::hashv, pubkey::Pubkey};
 use anchor_spl::associated_token::get_associated_token_address_with_program_id as ata;
 
@@ -46,6 +48,7 @@ fn main() {
     pda("eventAuthority", &[b"__event_authority"], &beam, &mut first);
     pda("globalVolumeAccumulator", &[b"global_volume_accumulator"], &beam, &mut first);
     pda("bondingCurve", &[b"bonding-curve", mint.as_ref()], &beam, &mut first);
+    pda("bondingCurveV2", &[b"bonding-curve-v2", mint.as_ref()], &beam, &mut first);
     pda("creatorVault", &[b"creator-vault", creator.as_ref()], &beam, &mut first);
     pda("userVolumeAccumulator", &[b"user_volume_accumulator", user.as_ref()], &beam, &mut first);
     pda("metadata", &[b"metadata", metadata.as_ref(), mint.as_ref()], &metadata, &mut first);
