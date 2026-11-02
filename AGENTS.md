@@ -88,6 +88,11 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   design is a goal, not a return guarantee. Do not impose ticker exclusivity,
   launch restrictions, fees or rewards from this direction alone, or promise
   token performance or loss prevention.
+- Follow the [Beam visual identity brief](docs/BRAND.md) for the crossbar-free
+  curved A mark and restrained 1980s retro-futurist frontend: black primary,
+  electric blue secondary and purple tertiary. Preserve accessible data and
+  controls, local fonts, mobile layout and reduced-motion behavior. Theme work
+  does not activate any product feature or financial mechanism.
 - The flagship $BEAM token is intended to launch on Beam, with a very high but
   unquantified share of eligible protocol revenue intended for buybacks and
   burns. No rate, mint, revenue denominator, budget, vault, authority or

@@ -426,7 +426,7 @@ function App() {
             aria-label="Beam home"
           >
             <span className="brand-icon">
-              <img src="/beam-mark.png" alt="" />
+              <img src="/beam-mark.svg" alt="" />
             </span>
             <span>
               beam<span className="brand-dot">.</span>
@@ -515,7 +515,7 @@ function App() {
               </span>
             </div>
           </div>
-          <div className="hero-visual" aria-label="Beam ray gun brand artwork">
+          <div className="hero-visual" aria-label="Beam arch brand artwork">
             <div className="visual-grid" />
             <div className="visual-ring visual-ring-one" />
             <div className="visual-ring visual-ring-two" />
@@ -523,8 +523,8 @@ function App() {
             <div className="hero-spark spark-two">✧</div>
             <img
               className="hero-logo"
-              src="/beam-mark.png"
-              alt="Minimal Beam ray gun logo"
+              src="/beam-mark-inverse.svg"
+              alt="Crossbar-free Beam arch mark"
             />
             <div className="visual-card">
               <span className="visual-card-label">THE BEAM EFFECT</span>
@@ -698,7 +698,7 @@ function App() {
             </button>
           </div>
           <div className="closing-mark">
-            <img src="/beam-mark.png" alt="" />
+            <img src="/beam-mark-inverse.svg" alt="" />
           </div>
         </section>
       </main>
@@ -706,7 +706,7 @@ function App() {
       <footer className="site-footer container">
         <div className="footer-brand">
           <span className="brand-icon">
-            <img src="/beam-mark.png" alt="" />
+            <img src="/beam-mark.svg" alt="" />
           </span>
           <strong>
             beam<span>.</span>

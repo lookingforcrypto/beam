@@ -49,6 +49,11 @@ to allocate more revenue than competitors, including Pump.fun, is unverified
 until comparable bases, periods, commitments and realized spending are checked.
 No buyback or burn is active, and neither guarantees $BEAM price appreciation.
 
+The [visual identity brief](docs/BRAND.md) specifies a crossbar-free, curved
+capital A mark and a restrained 1980s retro-futurist frontend. Black remains
+primary, electric blue secondary and purple tertiary. The current website is
+still a sample-data preview.
+
 Durable liquidity is also a product goal. Future validation must compare
 initial and continuing pool depth, LP ownership and withdrawal control,
 lock-versus-burn tradeoffs, slippage at comparable trade sizes, and behavior
