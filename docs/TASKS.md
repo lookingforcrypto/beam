@@ -188,6 +188,11 @@ precise specification and isolated adversarial tests.
    creator funding and holder rewards before choosing any rate. Do not count
    volume or third-party fees as spendable revenue, double-count allocated
    funds, add automatic market orders or claim perpetual revenue or returns.
+   Separately account for support of existing launched-token communities,
+   creator payouts, operations, flagship spending and any disclosed promotion;
+   the same receipt cannot fund two commitments. The balance among these uses
+   and any callout spending policy remain undecided. Do not ban callouts or
+   promise token survival.
 6. **Feature parity outside the contract.** Use the [feature matrix](FEATURES.md)
    to distinguish on-chain interfaces from missing product services. Build
    authorized creator-wallet, callout, and livestream experiences without
