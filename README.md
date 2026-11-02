@@ -57,6 +57,11 @@ The balance among them remains undecided. Callouts remain a planned feature,
 but no promotional spend is approved, and neither attention nor fee recycling
 can guarantee a token's survival or returns.
 
+The [visual identity brief](docs/BRAND.md) specifies a crossbar-free, curved
+capital A mark and a restrained 1980s retro-futurist frontend. Black remains
+primary, electric blue secondary and purple tertiary. The current website is
+still a sample-data preview.
+
 **King of the Hill** is a planned token-discovery area with a visible featured
 leader in the retro UI. Historical eligibility, ranking, turnover, and
 graduation rules need evidence before any old-Pump parity claim. The preview

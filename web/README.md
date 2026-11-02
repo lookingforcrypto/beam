@@ -7,6 +7,12 @@ No chain RPC, wallet connection, metadata upload, donation, stream, or trading
 action is present. The selected Raydium AMM v4 adapter and Beam fee collection
 are not implemented by this preview.
 
+The [visual identity brief](../docs/BRAND.md) defines the crossbar-free arch
+mark, black/blue/purple palette and restrained retro-futurist theme. The
+transparent SVG assets live in `public/`; `src/theme-retro.css` layers the
+visual treatment over the existing preview without changing sample data or
+adding a remote font or service.
+
 ```sh
 npm ci --prefix web
 npm run build --prefix web

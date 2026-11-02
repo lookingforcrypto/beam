@@ -89,6 +89,11 @@ a GitHub PR.
   design is a goal, not a return guarantee. Do not impose ticker exclusivity,
   launch restrictions, fees or rewards from this direction alone, or promise
   token performance or loss prevention.
+- Follow the [Beam visual identity brief](docs/BRAND.md) for the crossbar-free
+  curved A mark and restrained 1980s retro-futurist frontend: black primary,
+  electric blue secondary and purple tertiary. Preserve accessible data and
+  controls, local fonts, mobile layout and reduced-motion behavior. Theme work
+  does not activate any product feature or financial mechanism.
 - King of the Hill is planned discovery, not an implemented or proven old-Pump
   clone. Verify historical rule and threshold evidence before parity claims.
   Define eligible tokens and curve stages, ranking metric and tie-breaks,
