@@ -57,6 +57,21 @@ The balance among them remains undecided. Callouts remain a planned feature,
 but no promotional spend is approved, and neither attention nor fee recycling
 can guarantee a token's survival or returns.
 
+**King of the Hill** is a planned token-discovery area with a visible featured
+leader in the retro UI. Historical eligibility, ranking, turnover, and
+graduation rules need evidence before any old-Pump parity claim. The preview
+has no authenticated live leader or paid placement. A ranking would be a
+discovery signal, not investment advice, a safety audit, or a return promise.
+No artificial graduation delay is planned.
+
+Discovery should stay simple and give established token communities room to
+remain visible. Per-token discussion and opt-in community tools are ideas for
+future work, with moderation and spam limits required. Honest user activity
+must not be confused with automated buy bumps, wash volume or coordinated raid
+spam. Any reward or airdrop must disclose its eligibility, funding and timing
+only when those terms are actually decided; none is promised here. The $BEAM
+flagship goal does not promise rewards to every launched-token community.
+
 Durable liquidity is also a product goal. Future validation must compare
 initial and continuing pool depth, LP ownership and withdrawal control,
 lock-versus-burn tradeoffs, slippage at comparable trade sizes, and behavior
@@ -121,6 +136,7 @@ completion percentages or production approval.
 | Goal | State | Evidence and remaining work |
 | --- | --- | --- |
 | Beam-branded discovery and token pages | **Merged preview** | [PR #6](https://github.com/shawkkkkk/beam/pull/6) added a responsive UI with sample market data and browser-local drafts. It has no live chain feed. |
+| King of the Hill featured leader | **Planned; no live ranking** | Historical rules and authenticated Beam inputs need verification. Define eligibility, ranking, ties, refresh/dethroning, graduation and rollback before a responsive retro UI can display a real leader. Sample leaders must be labeled. |
 | Create, wallet, and trade flows | **Local SDK merged; live flow blocked** | [#7](https://github.com/shawkkkkk/beam/pull/7), [#18](https://github.com/shawkkkkk/beam/pull/18) and [#20](https://github.com/shawkkkkk/beam/pull/20) provide native-SOL/CreateV2 fixtures and raw event decoding. Draft [#13/#27](docs/TASKS.md) cover creator and V2 trade fixtures. There is no deployed Beam ID, finalized IDL, wallet signing or trade submission. |
 | Creator wallet, charity, callouts, livestream screens | **Local plans in draft** | [#17](https://github.com/shawkkkkk/beam/pull/17) merged an unverified read-only data boundary; draft [#28 → #31 → #32](docs/TASKS.md#draft-review-queue-prs-2234) adds unavailable-state preview copy. These do not provide authorized donations, calls, streams or migration. |
 
