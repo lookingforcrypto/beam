@@ -1,0 +1,88 @@
+# Local bonding-curve quotes
+
+Lane baseline: Beam main `c707f3022f947572b20f730ccae11a8ccb8da52a`.
+This lane owns `beam-quote.mjs`, its fixture producer, fixtures and tests. It
+does not change the Anchor program, immutable archives, economics, fee policy,
+website or Raydium adapter.
+
+```sh
+node --test sdk/beam-quote.test.mjs
+```
+
+## Interface
+
+All amounts are `bigint`. Inputs accept a bigint, a safe integer or a
+canonical decimal string that fits u64. `curve` is the object returned by
+`decodeCurrentBondingCurve` in `beam-native.mjs`.
+
+| Export | Mirrors | Result |
+| --- | --- | --- |
+| `buyQuote(curve, amount)` | `buy_quote` (lib.rs) | Quote needed for `amount` base units: `floor(a·vQ / (vT − a)) + 1`. |
+| `sellQuote(curve, amount)` | `BondingCurve::sell_quote` | Gross quote for `amount` base units: `floor(vQ·a / (vT + a))`. |
+| `tokensForQuote(curve, quote)` | `tokens_for_quote` | Base units for `quote − 1` via `constant_product::output`. |
+| `fee(amount, bps)` | `fee_math::fee` | `ceil(amount·bps / 10 000)`; must fit u64. |
+| `tradeFees({...})` | the local part of `trade_fees` / `get_fees` | Protocol and creator fees once the bps are known. |
+| `previewLegacyBuy({...})` | legacy `buy` handler order | `tokenAmount`, `solCost`, fees and `totalCost`. |
+| `previewLegacySell({...})` | legacy `sell` handler order | `tokenAmount`, `grossOutput`, fees and `netOutput`. |
+| `maxSolCostWithSlippage`, `minSolOutputWithSlippage` | not program code | Instruction bounds, rounded in the trader's favour. |
+
+Failures throw `QuoteError`. Its `code` is the program's `PumpError` variant:
+`Overflow`, `DivisionByZero`, `Truncation`, `BondingCurveComplete`,
+`BuyZeroAmount`, `NotEnoughTokensToBuy` or `SellZeroAmount`.
+
+The preview functions apply checks in the order the handlers use:
+
+- **Buy:** completion check, then the optional partial-fill clamp to
+  `realTokenReserves`, then the zero and reserve checks, then `buy_quote` as
+  u64, then fees on that cost.
+- **Sell:** completion check, then the zero check, then `sell_quote` as u64,
+  then fees subtracted from the gross output.
+
+## Fees are an explicit input
+
+For legacy trades, the program gets `(protocol_fee_bps, creator_fee_bps)`
+from a CPI to the inherited Pump fee program (`get_fees_with_quote_mint`). It
+then computes the amounts locally:
+
+- When `global.creator_fee_configurable` is set and the curve's
+  `creator_fee_bps` is nonzero, the curve's value replaces the returned
+  creator bps.
+- A curve whose creator is the zero key pays no creator fee.
+
+`tradeFees` reproduces only that local step. Its inputs are
+`protocolFeeBps`, `creatorFeeBps` and `creatorFeeConfigurable`, and callers
+must supply all three. They are never defaulted. `feeExempt: true` models the
+handler's whitelist-PDA path, which pays no fees.
+
+The fee CPI source is unresolved for Beam. Its vaults, recipients and the
+creator take are open owner decisions. These helpers do not implement
+Beam's planned 0.50% fee, the 42/5/3 split or any all-in quote. Raydium
+pool fees and migration charges are separate.
+
+## Evidence
+
+`fixtures/quote.json` is the unedited stdout of
+`tools/generate-quote-fixtures.rs`, run as a temporary example of the locked
+`beam-program` crate. The output contains:
+
+- `buy_quote`, `sell_quote` and `tokens_for_quote` for 9 curve states and
+  12 amounts each, including error results.
+- `fee_math::fee` for 110 amount/bps pairs, including u64 truncation.
+- `fee_math::get_fees` for 160 combinations of the creator-fee flag, the
+  curve creator, curve bps, tier bps and amount.
+
+`fixtures/quote.receipt.json` records the command, the toolchain and the
+SHA-256 of the source and the output. The tests recheck both hashes.
+
+## Not covered
+
+- **Handler composition.** The order and checks in the previews come from
+  reading the handler source. A synthetic local bank test of the handlers
+  themselves would be stronger evidence.
+- **Chain state.** The helpers read nothing from chain. The caller's token
+  balance, `global.whitelist_pda`, the fee CPI result and curve freshness
+  must come from an authenticated source.
+- **Other paths.** V2/V3, quote-mint, Mayhem and cashback trades are not
+  modelled.
+- **No execution.** There is no RPC, wallet, signing or transaction
+  submission. A quote is not a guarantee of execution.
