@@ -111,12 +111,8 @@ review sequence, including [fork-to-PR steps](CONTRIBUTING.md#contribute-from-a-
 for people without direct repository write access. A passing mock or host test
 is evidence for that narrow case, not proof of a deployable launchpad.
 
-At the 1 November 2026 maintainer check, Beam's
-[Slop listing](https://slop.cash/projects/beam) was paused with a security
-scan queued. Its current status could not be verified on 2 November. Confirm
-current maintainer direction before treating a listed task as available or
-resuming feature work. A Slop task's automatic closure does not approve a
-GitHub PR.
+Confirm current maintainer direction before taking a listed task or resuming
+feature work. A draft PR does not authorize a release or merge.
 
 ## Progress at a glance
 

@@ -10,9 +10,9 @@ Beam's current contract lives in `programs/beam`. Start with the
 Use Python 3 and a Rust/Cargo toolchain for contract checks, Node.js 22 for
 the SDK, and Node.js 24 plus npm for `web/`. Install dependencies from the
 project lockfiles and inspect install scripts first. No wallet, RPC key,
-private credential, or live network is needed for the checks below. The
-[Slop status note](docs/STATUS.md#contribution-and-security-status) is a dated
-observation, not permission to begin a listed task or merge a PR.
+private credential, or live network is needed for the checks below. Check
+current maintainer direction, branches and open PRs before claiming a task;
+the task ledger proposes scopes but does not assign work or approve a merge.
 
 ## Contribute from a fork
 
@@ -41,7 +41,7 @@ Push your topic branch to your fork with
 `git push -u origin YOUR_TOPIC_BRANCH`, then open a PR from that branch into
 `shawkkkkk/beam:main`, or into the declared dependency branch for a reviewed
 stack. A maintainer reviews the combined tree and exact-head CI before merge;
-passing checks or a Slop task status never grants merge approval. Keep
+passing checks never grant merge approval. Keep
 unresolved work in draft. The root-license caveat below still applies; a fork
 does not create a license grant for Beam-authored files.
 
@@ -163,19 +163,17 @@ Raydium bytecode. See the [validator scope](tests/amm-v4-validator/README.md).
 
 Host tests, mock accounts, and local simulations are welcome. Do not deploy to
 a live network, use real wallets, sign live transactions, transfer funds, or
-handle credentials as part of a normal contribution. If Beam is registered on
-Slop, use its current private security-report workflow for suspected
-exploitable findings. Otherwise use GitHub private vulnerability reporting if
-available; if neither exists, wait for a private maintainer route. Never post
-findings in public issues or pull requests.
+handle credentials as part of a normal contribution. Use GitHub private
+vulnerability reporting for suspected exploitable findings if available; if
+it is unavailable, wait for a private maintainer route. Never post findings in
+public issues or pull requests.
 
 ## Maintainer review and merge
 
-1. Confirm the live project status, requested scope, repository permissions,
-   root-license/contribution terms, PR target and dependency branches. Slop's
-   security scan or automatic task closure does not approve a GitHub merge.
-   While the listing is paused, do not infer that feature work or a release is
-   authorized from a draft PR or a passing check.
+1. Confirm current maintainer direction, task ownership, requested scope,
+   repository permissions, root-license/contribution terms, PR target and
+   dependency branches. A draft PR or passing check does not authorize a
+   release or merge.
 2. Review the **incremental diff against the declared target** and the
    **combined tree against `main`**. For stacks, follow the dependency order
    in [the task ledger](docs/TASKS.md#draft-review-queue-prs-2234). Resolve

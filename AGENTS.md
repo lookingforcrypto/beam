@@ -6,13 +6,10 @@ additional archive restrictions. Do not alter the pinned archive for Beam work.
 
 ## Start with the current work
 
-As of the 1 November 2026 maintainer check, Beam's Slop listing was paused
-with a security scan queued. Its current state was not verifiable on
-2 November 2026. The maintainer has since explicitly resumed Beam development
-in the cloud workspace; this does **not** establish Slop clearance or make a
-listed task available. Check current PR ownership and maintainer direction
-before work. Neither a Slop state change nor automatic task closure approves
-a GitHub PR.
+Before starting, verify current maintainer direction, task ownership, target
+branch, and contribution terms. Dated status notes and task ledger entries are
+not assignments or approval. A draft PR or passing test does not authorize a
+merge or release.
 
 1. Read `README.md`, `docs/STATUS.md`, `docs/ECONOMICS.md`, `docs/TASKS.md`,
    and `CONTRIBUTING.md`. Check the working tree, remote branches, and open
@@ -20,14 +17,17 @@ a GitHub PR.
 2. Use `programs/beam` as the editable Anchor program. Its retained Pump Main
    modules, Beam policy/economics/Raydium modules, and compatibility tests are
    the contract baseline. Do not start a second launchpad implementation.
-3. Claim one bounded lane after checking its open PRs. Record scope, base
-   commit, intended behavior, tests, and remaining risks in the PR description.
-   Check `docs/TASKS.md` and active pull requests to avoid duplicate work.
+3. Claim one bounded lane after checking its open PRs. Recheck the target
+   branch and open PRs for overlap before submitting. Record scope, base commit,
+   intended behavior, tests, and remaining risks in the PR description. Check
+   `docs/TASKS.md` and active pull requests to avoid duplicate work.
    External contributors can follow the [fork-to-PR guide](CONTRIBUTING.md#contribute-from-a-fork)
    without direct write access to Beam.
 4. Work in a separate branch. Do not rewrite another contributor's branch or
    merge competing architectures or fee policies without a reviewed decision.
-5. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
+5. Before substantial external contributions, confirm the repository's license
+   and contribution terms; archived source notices do not license new Beam code.
+6. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
    Define the interface, data source, authorization boundary, acceptance
    behavior, and local tests before enabling an external action. Use public
    behavior/docs for compatibility research, not private source or credential
@@ -159,8 +159,6 @@ merge, follow the [maintainer review sequence](CONTRIBUTING.md#maintainer-review
 on the exact head and combined target tree, and satisfy required formal
 approvals. Do not self-approve or bypass repository rules.
 
-If Beam is registered on Slop, report a suspected exploitable issue through
-Slop's current private security-report workflow. Otherwise use GitHub private
-vulnerability reporting if available. If neither private route exists, wait
-for a private maintainer route. Never publish findings or sensitive data in a
-public issue or pull request.
+Use GitHub private vulnerability reporting for suspected exploitable issues if
+available. If it is unavailable, wait for a private maintainer route. Never
+publish findings or sensitive data in a public issue or pull request.

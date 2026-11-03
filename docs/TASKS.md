@@ -2,11 +2,8 @@
 
 This ledger records scope and evidence checked through 2 November 2026. Check the live
 branches and pull requests before starting work; status may change. These are
-contribution scopes, not paid bounties. Beam's Slop listing was paused with a
-security scan queued on 1 November; its state could not be verified on
-2 November. The maintainer has separately resumed cloud development; do not
-infer Slop clearance or reward funding from that authorization. See
-[contribution status](STATUS.md#contribution-and-security-status).
+contribution scopes, not paid bounties. Confirm maintainer direction and PR
+ownership before taking a lane.
 
 ## Active review overlaps, 2 November 2026
 
@@ -246,20 +243,12 @@ behavior and interface tests, not recovered proprietary web/backend bytes.
 | Callouts | PR #15 owns local `backend/callouts/` service; no on-chain callout ABI or live provider is evidenced. | Authenticated mock request, abuse/error handling and accessible UI tests; no paid or live callout action. |
 | Livestreaming and moderation | PR #21 owns the local `backend/livestream/` lifecycle; media provider, durable identity/moderation and player UI remain separate. No on-chain stream ABI is evidenced. | Local permission, lifecycle and retention tests; future mock player/accessibility tests; no live stream or provider account creation. |
 
-The [Slop listing](https://slop.cash/projects/beam) was paused with its
-security scan queued at the 1 November 2026 maintainer check; its state was
-not verifiable during the 2 November documentation review. A maintainer must
-verify current status, repository-root license and contribution terms, task
-scope, and any reward funding before inviting Slop submissions. This repo
-currently has no root
-`LICENSE`; archived MIT/third-party notices do not decide Beam's new-code
-license. Closed PR #3 proposed a root license but it was not merged or adopted.
-Do not forge generated Slop skill/provenance files or change app permissions
-on behalf of contributors.
+This repo currently has no root `LICENSE`; archived MIT/third-party notices do
+not decide Beam's new-code license. Closed PR #3 proposed a root license but
+it was not merged or adopted. Maintainers must clarify contribution terms
+before inviting substantial external submissions.
 
-For external contributor listings, copy one bounded scope with its acceptance
-tests and current base commit. A maintainer handles any listing, reward terms,
-and registration separately. Do not open duplicate public issues to imply
-work is available or funded. [CONTRIBUTING.md](../CONTRIBUTING.md#maintainer-review-and-merge)
-defines the GitHub review and merge sequence; Slop automatic closure is not a
-GitHub approval or protection bypass.
+Do not open duplicate public issues to imply work is available or funded.
+[CONTRIBUTING.md](../CONTRIBUTING.md#maintainer-review-and-merge) defines the
+GitHub review and merge sequence; a task ledger entry is not GitHub approval
+or a protection bypass.

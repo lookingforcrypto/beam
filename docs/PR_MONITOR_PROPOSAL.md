@@ -54,8 +54,7 @@ public-repository event-policy limits. `gh pr merge --match-head-commit` is an
 immediate race guard for one action, not a permanent pin on later native
 auto-merge. A new head must be reviewed again.
 
-Slop automatic task closure is unrelated to GitHub approval or merging. No
-workflow should self-approve, bypass protections, use admin override, silently
+No workflow should self-approve, bypass protections, use admin override, silently
 merge a draft, or infer production readiness from source/host/mock checks.
 
 References: [GitHub native auto-merge](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/automatically-merging-a-pull-request),
