@@ -197,3 +197,8 @@ public issues or pull requests.
    enable auto-merge to evade an unresolved blocker, or delete another
    contributor's branch. After a dependency lands, rebase or retarget its
    children and repeat the combined-tree checks.
+
+For a ready PR targeting `main`, the owner may opt in to GitHub's protected
+auto-merge after the review above by adding `merge-when-ready`. The workflow
+and cancellation behavior are documented in [AUTO_MERGE.md](docs/AUTO_MERGE.md).
+Do not apply the label to a draft or use it as a substitute for review.

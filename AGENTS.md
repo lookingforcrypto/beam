@@ -159,6 +159,11 @@ merge, follow the [maintainer review sequence](CONTRIBUTING.md#maintainer-review
 on the exact head and combined target tree, and satisfy required formal
 approvals. Do not self-approve or bypass repository rules.
 
+The owner can queue a reviewed, ready PR for GitHub's protected-branch
+auto-merge with the `merge-when-ready` label. Follow
+[the auto-merge guide](docs/AUTO_MERGE.md); the label does not replace exact-head
+review, required checks, or the separate release decision.
+
 Use GitHub private vulnerability reporting for suspected exploitable issues if
 available. If it is unavailable, wait for a private maintainer route. Never
 publish findings or sensitive data in a public issue or pull request.

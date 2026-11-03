@@ -1,0 +1,65 @@
+name: Owner opt-in auto-merge
+
+# This workflow runs from the protected base branch. It never checks out or
+# executes pull-request code with its write-capable token.
+on:
+  pull_request_target:
+    types: [labeled, unlabeled, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: merge-when-ready-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  toggle:
+    if: >-
+      github.repository == 'shawkkkkk/beam' &&
+      github.event.pull_request.base.ref == 'main' &&
+      (github.event.action == 'synchronize' ||
+       (github.event.label.name == 'merge-when-ready' &&
+        (github.event.action == 'unlabeled' ||
+         github.event.sender.login == 'shawkkkkk')))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Recheck PR and update native auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          EVENT_HEAD: ${{ github.event.pull_request.head.sha }}
+          EVENT_ACTION: ${{ github.event.action }}
+        run: |
+          set -euo pipefail
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]*$ ]] || exit 1
+
+          # Event payloads can age while a job is queued. Re-read the PR before
+          # enabling auto-merge, and never pass PR text to the shell as code.
+          pr_json="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}")"
+
+          if [[ "$EVENT_ACTION" == 'labeled' ]]; then
+            jq -e --arg head "$EVENT_HEAD" '
+              .state == "open" and .draft == false and
+              .base.ref == "main" and .head.sha == $head and
+              ([.labels[].name] | index("merge-when-ready") != null)
+            ' <<<"$pr_json" >/dev/null
+
+            # GitHub enforces the protected branch's checks, freshness, and
+            # unresolved-conversation gates. There is no --admin bypass.
+            gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --auto --squash --match-head-commit "$EVENT_HEAD"
+          elif jq -e --arg action "$EVENT_ACTION" '
+            .state == "open" and .base.ref == "main" and
+            ((($action == "unlabeled") and
+              ([.labels[].name] | index("merge-when-ready") == null)) or
+             (($action == "synchronize") and
+              ([.labels[].name] | index("merge-when-ready") != null)))
+          ' <<<"$pr_json" >/dev/null; then
+            if [[ "$(gh pr view "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" \
+              --json autoMergeRequest --jq '.autoMergeRequest != null')" == 'true' ]]; then
+              gh pr merge "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --disable-auto
+            fi
+          fi
