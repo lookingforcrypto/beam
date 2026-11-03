@@ -14,6 +14,37 @@ private credential, or live network is needed for the checks below. The
 [Slop status note](docs/STATUS.md#contribution-and-security-status) is a dated
 observation, not permission to begin a listed task or merge a PR.
 
+## Contribute from a fork
+
+Beam is public and forkable. You do not need write access to the canonical
+repository. Use GitHub's **Fork** action on
+[`shawkkkkk/beam`](https://github.com/shawkkkkk/beam), then clone your fork:
+
+```sh
+git clone https://github.com/YOUR_GITHUB_USER/beam.git
+cd beam
+git remote add upstream https://github.com/shawkkkkk/beam.git
+git fetch upstream
+git switch main
+git merge --ff-only upstream/main
+git switch -c YOUR_TOPIC_BRANCH
+```
+
+Read the applicable [AGENTS.md](AGENTS.md) instructions, check the current
+[task ledger](docs/TASKS.md), open PRs, and remote branches, then coordinate
+one unclaimed lane before editing. If your fork's `main` has diverged, resolve
+that deliberately; do not force-push someone else's work. Run the relevant
+checks below and record the exact tested commit, commands, results, changed
+paths, dependencies, risks and evidence limits in your PR description.
+
+Push your topic branch to your fork with
+`git push -u origin YOUR_TOPIC_BRANCH`, then open a PR from that branch into
+`shawkkkkk/beam:main`, or into the declared dependency branch for a reviewed
+stack. A maintainer reviews the combined tree and exact-head CI before merge;
+passing checks or a Slop task status never grants merge approval. Keep
+unresolved work in draft. The root-license caveat below still applies; a fork
+does not create a license grant for Beam-authored files.
+
 ## Choose a scoped change
 
 Check open pull requests and remote branches before beginning. [PR #1](https://github.com/shawkkkkk/beam/pull/1)
@@ -43,7 +74,7 @@ does not include Pump's proprietary website or service backends.
 There is currently no repository-root license file. The licenses inside the
 upstream snapshots apply to those snapshots; they do not establish a license
 for every new Beam file. Maintainers need to clarify the project's own license
-and contribution terms before inviting substantial external submissions.
+and contribution terms before accepting substantial external code.
 
 ## Check the change
 
@@ -64,16 +95,17 @@ tests for success, failure rollback, authority checks, replay, and accounting
 before activation. Do not treat a host pass as a real program or deployed
 Raydium test.
 
-For the merged native-SOL SDK fixtures, use Node.js 22 from the repository
+For merged SDK fixtures and event decoders, use Node.js 22 from the repository
 root; `sdk/` has no package manifest:
 
 ```sh
-node --test sdk/beam-native.test.mjs
+node --test sdk/*.test.mjs
 ```
 
 For SDK drafts, also run each changed `sdk/*.test.mjs` file explicitly.
-The SDK workflow on `main` runs only `beam-native.test.mjs`; a green job
-does not prove other draft fixtures ran unless the workflow is updated.
+The merged SDK workflow runs matching `sdk/*.test.mjs` and
+`backend/*/*.test.mjs` files under Node.js 22. A green job does not prove
+unmerged draft fixtures or website browser interactions ran.
 
 For the merged website preview, use Node.js 24:
 
@@ -102,8 +134,8 @@ node --test backend/livestream/livestream.test.mjs
 
 Run only commands for paths present in your checked-out branch. These
 services do not start an authenticated production API, media provider or
-donation provider. Their tests are not included in `main` CI until a reviewed
-workflow adds them.
+donation provider. The merged SDK workflow discovers their test files once
+those draft service paths land on `main`.
 
 If `tests/runtime-harness/Cargo.toml` exists in your checked-out branch, run
 its separate locked suite from the repository root in both modes:
@@ -117,6 +149,17 @@ The harness is in draft PR #25 and its descendants, not on `main`. It uses
 synthetic accounts and valueless balances; it does not execute captured
 original Pump binaries or prove real Raydium CPI behavior. The normal
 `programs/beam` tests above do not run this separate manifest.
+
+The merged AMM v4 validator is another separate crate. With Rust 1.99.1,
+run its pinned-source local CPI tests from the repository root:
+
+```sh
+cargo test --locked --manifest-path tests/amm-v4-validator/Cargo.toml -- --test-threads=1
+```
+
+These tests invoke the pinned Raydium Rust processor through a synthetic
+local probe. They do not execute Beam's migration handler or verify deployed
+Raydium bytecode. See the [validator scope](tests/amm-v4-validator/README.md).
 
 Host tests, mock accounts, and local simulations are welcome. Do not deploy to
 a live network, use real wallets, sign live transactions, transfer funds, or

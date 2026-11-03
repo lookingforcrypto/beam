@@ -1,21 +1,28 @@
 # Upstream attribution
 
-Beam uses the pump.fun ($PUMP) program work as published at
-[lalalune/pumpfun-source](https://github.com/lalalune/pumpfun-source), byte for
-byte, at this commit:
+Beam vendors the community reconstruction of pump.fun's on-chain programs
+from the [pumpfun-source repository](https://github.com/lalalune/pumpfun-source),
+pinned byte for byte at this commit:
 
 [`5703df02131ab944408e0cf679b4bef9c22e1a3d`](https://github.com/lalalune/pumpfun-source/commit/5703df02131ab944408e0cf679b4bef9c22e1a3d)
 
+The [archived source snapshot](../upstream/pumpfun-source/README.md) remains
+available in Beam. On 2 November 2026, the historical public repository and
+commit URLs returned 404 through GitHub's API. That result alone does not
+distinguish deletion from a private or moved repository.
+On the same date, a [surviving fork served the pinned commit](https://github.com/y4coub/pumpfun-source/tree/5703df02131ab944408e0cf679b4bef9c22e1a3d)
+with the same Git tree ID, `35c5ccdbb1564999785dcfb703e45adb95948497`.
+That fork's default branch is an older reconstruction checkpoint.
+
 The pin is recorded in [`upstream/manifest.json`](../upstream/manifest.json).
 The tree under `upstream/pumpfun-source` is that commit. Its 380 Git blobs,
-paths, and file modes match the GitHub tree of the commit, and they match
-[`upstream/files.json`](../upstream/files.json).
+paths, and file modes match the locally preserved Git tree for that commit and
+[`upstream/files.json`](../upstream/files.json). This is a complete copy of the
+pinned source-only tree, not a backup of the full Git history, research files,
+captured binaries, GitHub discussions, or pump.fun website and backend.
 
-That repository is the completed community reconstruction of pump.fun's
-on-chain programs. pump.fun is the original author of the program. Shaw
-([@lalalune](https://github.com/lalalune)) and the
-[pumpfun-source contributors](https://github.com/lalalune/pumpfun-source/graphs/contributors)
-published the reconstruction. The archived MIT notice in
+That repository contains a community reconstruction, not an official
+pump.fun release. The archived MIT notice in
 `upstream/pumpfun-source/LICENSE` reads "Copyright (c) 2026 pump.fun
 contributors."
 
