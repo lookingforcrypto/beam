@@ -7,9 +7,43 @@ additional archive restrictions. Do not alter the pinned archive for Beam work.
 ## Start with the current work
 
 Before starting, verify current maintainer direction, task ownership, target
-branch, and contribution terms. Dated status notes and task ledger entries are
+branch, and contribution terms. Apply explicit owner decisions recorded below
+before older task snapshots or draft PR prose. Merged code establishes what is
+implemented; an open PR establishes only proposed work. If evidence conflicts,
+record the conflict in the draft PR and keep the affected behavior disabled
+until the owner resolves it. Dated status notes and task ledger entries are
 not assignments or approval. A draft PR or passing test does not authorize a
 merge or release.
+
+## Current owner decisions and unset values
+
+The owner's 3 November 2026 direction supersedes older draft prose and dated
+task snapshots. Beam should evoke the simple pre-PumpSwap launch experience:
+create, trade on a visible bonding curve, discover active communities, and
+graduate to Raydium AMM v4. This is a product direction, not a claim that the
+website, trading client, ranking service, or migration is already live or
+identical to Pump.fun. Check current code and PRs before describing availability.
+
+- The planned ordinary Beam allocation is 42/5/3 nominal basis points for
+  community/treasury/founder. Creator payouts come **out of the 42-bps
+  community share**. The owner deliberately left the creator payout rate
+  **unset**; do not select 12 bps or any other rate, add a separate creator
+  charge, hard-code an all-in quote, or wire live distribution until the rate,
+  recipients, rounding, and custody are reviewed and tested.
+- At AMM v4 graduation, burn all LP issued to Beam in the same transaction,
+  following the selected historical Raydium pattern. Draft [PR #68](https://github.com/shawkkkkk/beam/pull/68)
+  implements a gated adapter and draft [PR #72](https://github.com/shawkkkkk/beam/pull/72)
+  adds the burn; neither is merged or activated. Burning LP relinquishes
+  Beam's claim to ongoing AMM v4 LP fees. Do not promise post-graduation LP
+  revenue, creator fees, or recurring buybacks from that position.
+- The creator rate, community-remainder distribution, post-graduation revenue
+  source, Token-2022 graduation, non-SOL graduation, fee vault authorities,
+  flagship mint/buyback policy, charity design, general pairing support, and
+  repository-root license remain unset or unimplemented as described in the
+  current code and [economics guide](docs/ECONOMICS.md). Do not fill gaps from
+  competitor terms, archived code, sample data, or an unmerged PR. Keep any
+  path that depends on an unset decision disabled; name the exact blocker in
+  the draft PR and request a reviewed owner decision before activation.
 
 1. Read `README.md`, `docs/STATUS.md`, `docs/ECONOMICS.md`, `docs/TASKS.md`,
    and `CONTRIBUTING.md`. Check the working tree, remote branches, and open
@@ -49,14 +83,15 @@ merge or release.
   them to PumpSwap or claim that the retained quote-chain code routes through
   Raydium.
 - The existing Raydium CPMM migration is a gated, superseded candidate. The
-  user chose Raydium AMM v4; build and verify that adapter separately before
-  activation. Current LP burning does not leave Beam an LP fee claim for
-  recurring buybacks. Principal custody and fee rights remain unresolved.
+  user chose Raydium AMM v4 and burning Beam-received LP; verify the draft
+  adapter, pool state, burn, replay and rollback before activation. Burned LP
+  cannot be withdrawn by Beam or harvested for recurring LP fees.
 - Durable liquidity is a product goal, not a consequence proved by choosing
   AMM v4. Compare initial and continuing depth, LP ownership/control and
   withdrawal rights, lock/burn tradeoffs, slippage at comparable trade sizes,
-  and post-graduation pool behavior. Do not pick an LP scheme or promise chart
-  resilience from historical Raydium-versus-PumpSwap anecdotes; comparable
+  and post-graduation pool behavior. Treat the selected LP burn as binding
+  unless the owner changes it; do not promise chart resilience from historical
+  Raydium-versus-PumpSwap anecdotes. Comparable
   liquidity and market-period evidence is required to test that hypothesis.
 - `beam_economics.rs` contains provisional fee-allocation arithmetic; the
   inherited Pump fee CPI still governs real trade collection. The community
@@ -64,9 +99,9 @@ merge or release.
   eligibility, the flagship mint, vaults, and distribution rules are open.
   The user's Beam fee split is 42/5/3 nominal basis points for community,
   treasury and founder. Preserve the creator payout and creator-selected
-  wallet system. Whether its fee comes from the community share or an
-  additional charge remains undecided; do not assume either. Disclose each
-  applicable curve, creator, migration, and Raydium pool fee; never promise returns.
+  wallet system. Creator payouts must come from the 42-bps community share;
+  the exact creator rate remains unset. Disclose each applicable curve,
+  creator, migration, and Raydium pool fee; never promise returns.
 - On-chain reconstruction does not provide Pump's website, streaming, callout,
   or charity service backends. Treat those as independent feature work with
   authorized providers; never imply their behavior is byte-identical. The
@@ -106,8 +141,9 @@ merge or release.
   around PumpSwap. A plain-language "How it works" onboarding explanation
   should use evidenced Beam configuration for graduation, LP custody/burn,
   fees, launch allocations and availability. Do not copy historical threshold
-  numbers or assert no presale/team allocation, instant selling or LP burning
-  from a third-party screenshot.
+  numbers or assert no presale/team allocation or instant selling from a
+  third-party screenshot. Describe LP burning as the selected but unmerged
+  Beam policy until its migration PRs land and are validated.
 - Keep community discovery simple and give ongoing token communities a fair
   chance to remain visible. Per-token comments or opt-in social features need
   moderation, rate limits and anti-spam checks. Never use fake volume, wash
@@ -156,8 +192,10 @@ trade, move funds, collect secrets, or launch live services in a pull request.
 A release requires a separate maintainer-controlled process. Respect branch
 protections and leave unresolved or untested work in draft state. Before any
 merge, follow the [maintainer review sequence](CONTRIBUTING.md#maintainer-review-and-merge)
-on the exact head and combined target tree, and satisfy required formal
-approvals. Do not self-approve or bypass repository rules.
+on the exact head and combined target tree, and satisfy any formal approvals
+required by the current branch rule. `main` currently has no mandatory
+approval count; this does not replace the owner's review. Do not self-approve
+or bypass repository rules.
 
 The owner can queue a reviewed, ready PR for GitHub's protected-branch
 auto-merge with the `merge-when-ready` label. Follow

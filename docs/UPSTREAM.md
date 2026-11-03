@@ -168,9 +168,9 @@ package.
   nominal basis points (community, treasury, founder), rounded once with split
   dust assigned to the community. It does not replace the retained creator-fee
   code in `src/fee_cpi.rs` or `src/util/fee.rs`, and it is not wired into trade
-  collection. Whether a creator payout comes from the community share or from
-  an additional charge is undecided. The inherited Pump fee CPI still governs
-  the retained trade path.
+  collection. The owner selected creator payouts from the 42-bps community
+  share, with their rate intentionally unset. The inherited Pump fee CPI still
+  governs the retained trade path and is not approved as an extra Beam charge.
 - `src/beam_amm_v4.rs`. Source-only guards for the Raydium AMM v4
   `Initialize2` ABI at `raydium-io/raydium-amm`
   `91739d8d9f5cf347e0ce14ebe4d2bb7069fb31b6`. No Beam instruction calls this

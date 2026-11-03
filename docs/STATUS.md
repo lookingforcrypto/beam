@@ -39,7 +39,15 @@ stacked review order. A passing draft test does not make its feature live.
 ## Outstanding before use
 
 1. Beam-controlled fee configuration and vaults. Pump's inherited fee-program namespaces/authority assumptions must be replaced or rehosted. Source compatibility does not establish that Pump's deployed fee program accepts Beam's ID.
-2. Replace the superseded CPMM candidate with an independently verified Raydium AMM v4 adapter. AMM v4 accepts classic SPL Token mints only, while Beam's retained curve also supports restricted Token-2022 mints; do not silently delete those launches or route them to an unsupported pool. Design principal-lock/fee-rights integration for recurring community buybacks and post-graduation creator claims; current candidate burns LP. Keep migration gated until the final venue, policy and tests are implemented.
+2. Replace the superseded CPMM candidate with the independently verified
+   Raydium AMM v4 adapter in draft [#68](https://github.com/shawkkkkk/beam/pull/68)
+   and the owner-selected LP burn in draft [#72](https://github.com/shawkkkkk/beam/pull/72).
+   AMM v4 accepts classic SPL Token mints only, while Beam's retained curve
+   also supports restricted Token-2022 mints; do not silently delete those
+   launches or route them to an unsupported pool. Burning Beam-received LP
+   removes Beam's withdrawal claim and ongoing LP-fee rights. A separate
+   source is needed for post-graduation creator or community payments. Keep
+   migration gated until the adapter, policy and tests are reviewed.
 3. Non-SOL migration, Raydium AMM v4 quote-chain routing, AMM-dependent creator/sharing/CTO operations, and compatible donation creation/collection. [Merged PR #12](https://github.com/shawkkkkk/beam/pull/12) makes a nested graduated `create_v2` PumpSwap quote fail closed; it does not quote AMM v4. Remove all active PumpSwap runtime, PDA and ownership assumptions outside the immutable upstream archive; fail-closed handlers are interim gaps, not the finished behavior.
 4. Regenerated Beam IDL, complete wallet builders, real indexer and production UI. The merged native-SOL fixture encoder is only a local construction layer; retained dependency IDLs are reference interfaces, not a finalized Beam client API.
    Preserve creator-fee recipient selection and build independent, authorized services for donation choices, callouts, and livestreaming. The pinned on-chain source does not supply those off-chain products. See the [feature matrix](FEATURES.md).
@@ -56,11 +64,12 @@ was closed unmerged because its contract and fee policy conflict with the
 current `programs/beam` baseline. Its reviewed sample-data website was
 carried into merged [PR #6](https://github.com/shawkkkkk/beam/pull/6).
 
-Creator payouts and creator-selected wallet behavior remain requirements,
-while funding from the community share versus an additional charge is
-undecided. The ordinary proposed allocation is 42/5/3 basis points for
-community/treasury/founder: 50 basis points total, including 8 basis points
-under platform control. The optional disabled, three-second buy-side quote
+Creator payouts and creator-selected wallet behavior remain requirements.
+The owner chose to fund creator payouts from the 42-bps community share; the
+creator rate remains unset. The ordinary proposed allocation is 42/5/3 basis
+points for community/treasury/founder: 50 nominal basis points total, including
+8 basis points under platform control. This is not an active or all-in trade
+fee. The optional disabled, three-second buy-side quote
 prototype models an initial 99% fee of gross buyer debit. A 99% fee on net
 base would be about 49.75% of gross (0.99 / 1.99), so it is not the same rule.
 Its launch surcharge is separate from ordinary allocation, with no recipient
