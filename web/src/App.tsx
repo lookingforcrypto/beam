@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import {
   Activity,
   ArrowRight,
@@ -41,6 +48,7 @@ import {
 
 type Feed = "trending" | "new" | "graduating" | "watchlist";
 type Modal = "create" | "wallet" | "how" | null;
+const feedOrder: Feed[] = ["trending", "new", "graduating", "watchlist"];
 
 // The preview has no authenticated indexer feed. Keep its cards in sample state.
 const marketData = sampleState(sampleTokens);
@@ -358,6 +366,32 @@ function App() {
 
   const toggleSaved = (id: string) =>
     setSaved((current) => toggleWatchlist(current, id));
+  const onFeedKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const current = feedOrder.indexOf(
+      (event.target as HTMLButtonElement).dataset.feed as Feed,
+    );
+    if (current < 0) return;
+    let next: Feed;
+    switch (event.key) {
+      case "ArrowRight":
+        next = feedOrder[(current + 1) % feedOrder.length];
+        break;
+      case "ArrowLeft":
+        next = feedOrder[(current - 1 + feedOrder.length) % feedOrder.length];
+        break;
+      case "Home":
+        next = feedOrder[0];
+        break;
+      case "End":
+        next = feedOrder[feedOrder.length - 1];
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setFeed(next);
+    document.getElementById(`feed-tab-${next}`)?.focus();
+  };
   const openExplore = () =>
     document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" });
 
@@ -615,34 +649,55 @@ function App() {
             </div>
           </div>
           <div className="market-toolbar">
-            <div className="feed-tabs" role="tablist" aria-label="Token feed">
+            <div
+              className="feed-tabs"
+              role="tablist"
+              aria-label="Token feed"
+              onKeyDown={onFeedKeyDown}
+            >
               <button
+                id="feed-tab-trending"
+                data-feed="trending"
                 role="tab"
                 aria-selected={feed === "trending"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "trending" ? 0 : -1}
                 className={feed === "trending" ? "active" : ""}
                 onClick={() => setFeed("trending")}
               >
                 <Flame size={16} /> Trending
               </button>
               <button
+                id="feed-tab-new"
+                data-feed="new"
                 role="tab"
                 aria-selected={feed === "new"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "new" ? 0 : -1}
                 className={feed === "new" ? "active" : ""}
                 onClick={() => setFeed("new")}
               >
                 <Clock3 size={16} /> New
               </button>
               <button
+                id="feed-tab-graduating"
+                data-feed="graduating"
                 role="tab"
                 aria-selected={feed === "graduating"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "graduating" ? 0 : -1}
                 className={feed === "graduating" ? "active" : ""}
                 onClick={() => setFeed("graduating")}
               >
                 <Zap size={16} /> Graduating
               </button>
               <button
+                id="feed-tab-watchlist"
+                data-feed="watchlist"
                 role="tab"
                 aria-selected={feed === "watchlist"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "watchlist" ? 0 : -1}
                 className={feed === "watchlist" ? "active" : ""}
                 onClick={() => setFeed("watchlist")}
               >
@@ -664,6 +719,7 @@ function App() {
                   className={view === "grid" ? "selected" : ""}
                   onClick={() => setView("grid")}
                   aria-label="Grid view"
+                  aria-pressed={view === "grid"}
                 >
                   <Grid2X2 size={17} />
                 </button>
@@ -671,40 +727,55 @@ function App() {
                   className={view === "list" ? "selected" : ""}
                   onClick={() => setView("list")}
                   aria-label="List view"
+                  aria-pressed={view === "list"}
                 >
                   <List size={18} />
                 </button>
               </div>
             </div>
           </div>
-          {tokens.length > 0 ? (
-            <div className={`token-grid ${view === "list" ? "list-view" : ""}`}>
-              {tokens.map((token) => (
-                <TokenCard
-                  key={token.id}
-                  token={token}
-                  saved={saved.includes(token.id)}
-                  onOpen={() => setSelected(token)}
-                  onSave={() => toggleSaved(token.id)}
-                  view={view}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <Compass size={28} />
-              <h3>
-                {feed === "watchlist" && !search
-                  ? "Your watchlist is empty"
-                  : "No tokens found"}
-              </h3>
-              <p>
-                {feed === "watchlist" && !search
-                  ? "Tap the heart on a token to save it here."
-                  : "Try another name or symbol."}
-              </p>
-            </div>
-          )}
+          <p className="sr-only" role="status" aria-live="polite">
+            {tokens.length} {tokens.length === 1 ? "token" : "tokens"} in the{" "}
+            {feed} feed
+            {search.trim() ? ` matching ${search.trim()}` : ""}.
+          </p>
+          <div
+            id="feed-panel"
+            role="tabpanel"
+            aria-labelledby={`feed-tab-${feed}`}
+            tabIndex={0}
+          >
+            {tokens.length > 0 ? (
+              <div
+                className={`token-grid ${view === "list" ? "list-view" : ""}`}
+              >
+                {tokens.map((token) => (
+                  <TokenCard
+                    key={token.id}
+                    token={token}
+                    saved={saved.includes(token.id)}
+                    onOpen={() => setSelected(token)}
+                    onSave={() => toggleSaved(token.id)}
+                    view={view}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Compass size={28} />
+                <h3>
+                  {feed === "watchlist" && !search
+                    ? "Your watchlist is empty"
+                    : "No tokens found"}
+                </h3>
+                <p>
+                  {feed === "watchlist" && !search
+                    ? "Tap the heart on a token to save it here."
+                    : "Try another name or symbol."}
+                </p>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="closing-cta container">

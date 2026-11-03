@@ -147,6 +147,58 @@ try {
   assert.match(hillCopy, /No live leader/i);
   assert.match(hillCopy, /sample tokens below are not ranked/i);
 
+  // Discovery tabs expose one keyboard stop, their panel, and live result count.
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('.feed-tabs [tabindex=\"0\"]').length",
+    ),
+    1,
+  );
+  await evaluate("document.getElementById('feed-tab-trending').focus()");
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "ArrowRight",
+    code: "ArrowRight",
+    windowsVirtualKeyCode: 39,
+  });
+  await until(
+    "document.activeElement?.id === 'feed-tab-new' && document.getElementById('feed-panel')?.getAttribute('aria-labelledby') === 'feed-tab-new'",
+  );
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "End",
+    code: "End",
+    windowsVirtualKeyCode: 35,
+  });
+  await until(
+    "document.activeElement?.id === 'feed-tab-watchlist' && document.querySelector('.market-section [role=status]')?.textContent.includes('0 tokens in the watchlist feed')",
+  );
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Home",
+    code: "Home",
+    windowsVirtualKeyCode: 36,
+  });
+  await until("document.activeElement?.id === 'feed-tab-trending'");
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('.feed-tabs [aria-selected=\"true\"]').length",
+    ),
+    1,
+  );
+  await evaluate(
+    "document.querySelector('button[aria-label=\"List view\"]').click()",
+  );
+  await until(
+    "document.querySelector('button[aria-label=\"List view\"]')?.getAttribute('aria-pressed') === 'true'",
+  );
+  assert.equal(
+    await evaluate(
+      "document.querySelector('button[aria-label=\"Grid view\"]')?.getAttribute('aria-pressed')",
+    ),
+    "false",
+  );
+
   // A malformed watchlist must not prevent React from rendering on reload.
   await evaluate(
     "localStorage.setItem('beam-watchlist', '{'); localStorage.setItem('beam-local-drafts', '{')",
