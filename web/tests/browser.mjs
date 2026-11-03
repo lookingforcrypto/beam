@@ -140,6 +140,32 @@ try {
     /0\.42% community \/ 0\.05% treasury \/ 0\.03% founder/,
   );
   assert.doesNotMatch(initialCopy, /CPMM|durable liquidity|lasting liquidity/i);
+  assert.match(
+    initialCopy,
+    /Creator payouts use the community share; rate unset/i,
+  );
+  assert.doesNotMatch(
+    initialCopy,
+    /creator payout funding (pending|undecided)/i,
+  );
+  await evaluate(
+    "[...document.querySelectorAll('button')].find(b => b.textContent.includes('How it works')).click()",
+  );
+  await until("!!document.querySelector('[role=dialog] .how-steps')");
+  const howCopy = await evaluate(
+    "document.querySelector('[role=dialog]').innerText",
+  );
+  assert.match(howCopy, /creator payout rate is unset/i);
+  assert.match(howCopy, /not an all-in trade quote/i);
+  assert.match(howCopy, /burn the LP it receives at graduation/i);
+  assert.match(howCopy, /no ongoing LP-fee claim/i);
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Escape",
+    code: "Escape",
+    windowsVirtualKeyCode: 27,
+  });
+  await until("!document.querySelector('[role=dialog]')");
   const hillCopy = await evaluate(
     "document.querySelector('.hill-preview')?.innerText",
   );
