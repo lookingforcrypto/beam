@@ -8,10 +8,11 @@ additional archive restrictions. Do not alter the pinned archive for Beam work.
 
 As of the 1 November 2026 maintainer check, Beam's Slop listing was paused
 with a security scan queued. Its current state was not verifiable on
-2 November 2026. Check the live listing and maintainer direction before
-starting feature work or treating a task as available. Documentation and
-review activity can continue within the scope approved by maintainers;
-neither a Slop state change nor automatic task closure approves a GitHub PR.
+2 November 2026. The maintainer has since explicitly resumed Beam development
+in the cloud workspace; this does **not** establish Slop clearance or make a
+listed task available. Check current PR ownership and maintainer direction
+before work. Neither a Slop state change nor automatic task closure approves
+a GitHub PR.
 
 1. Read `README.md`, `docs/STATUS.md`, `docs/ECONOMICS.md`, `docs/TASKS.md`,
    and `CONTRIBUTING.md`. Check the working tree, remote branches, and open
@@ -22,6 +23,8 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
 3. Claim one bounded lane after checking its open PRs. Record scope, base
    commit, intended behavior, tests, and remaining risks in the PR description.
    Check `docs/TASKS.md` and active pull requests to avoid duplicate work.
+   External contributors can follow the [fork-to-PR guide](CONTRIBUTING.md#contribute-from-a-fork)
+   without direct write access to Beam.
 4. Work in a separate branch. Do not rewrite another contributor's branch or
    merge competing architectures or fee policies without a reviewed decision.
 5. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
@@ -49,6 +52,12 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   user chose Raydium AMM v4; build and verify that adapter separately before
   activation. Current LP burning does not leave Beam an LP fee claim for
   recurring buybacks. Principal custody and fee rights remain unresolved.
+- Durable liquidity is a product goal, not a consequence proved by choosing
+  AMM v4. Compare initial and continuing depth, LP ownership/control and
+  withdrawal rights, lock/burn tradeoffs, slippage at comparable trade sizes,
+  and post-graduation pool behavior. Do not pick an LP scheme or promise chart
+  resilience from historical Raydium-versus-PumpSwap anecdotes; comparable
+  liquidity and market-period evidence is required to test that hypothesis.
 - `beam_economics.rs` contains provisional fee-allocation arithmetic; the
   inherited Pump fee CPI still governs real trade collection. The community
   share's holder-reward/buyback split is a provisional test setting. Holder
@@ -63,6 +72,66 @@ neither a Slop state change nor automatic task closure approves a GitHub PR.
   authorized providers; never imply their behavior is byte-identical. The
   pinned archive does contain separate donation-relay and Pump Fees programs;
   their presence is not Beam integration or charity authorization.
+- Preserve the desired ability to pair with arbitrary compatible Solana token
+  mints and supported contracts, subject to token-program, venue, account and
+  security validation. Do not claim every Solana program is a valid pair or
+  that general pairing is already implemented. Raydium AMM v4 remains the
+  selected graduation venue. Stocks, tokenized stocks and stock-linked pairs
+  are outside current scope; no future stock work is scheduled.
+- Charity is an open redesign decision. Keep the archived donation source and
+  existing capability evidence intact. Do not implement compulsory charity
+  deductions, choose a provider/recipient, or assign a new fee share without
+  a reviewed product decision. A clearly disclosed optional approach may be
+  considered later; no live donation is authorized.
+- Seek newcomer clarity and transparent risks. Investigate misleading copycat
+  launches, fragmented liquidity across similar narratives, and extraction
+  incentives without asserting competitor allegations as fact. Holding-friendly
+  design is a goal, not a return guarantee. Do not impose ticker exclusivity,
+  launch restrictions, fees or rewards from this direction alone, or promise
+  token performance or loss prevention.
+- Follow the [Beam visual identity brief](docs/BRAND.md) for the crossbar-free
+  curved A mark and restrained 1980s retro-futurist frontend: black primary,
+  electric blue secondary and purple tertiary. Preserve accessible data and
+  controls, local fonts, mobile layout and reduced-motion behavior. Theme work
+  does not activate any product feature or financial mechanism.
+- King of the Hill is planned discovery, not an implemented or proven old-Pump
+  clone. Verify historical rule and threshold evidence before parity claims.
+  Define eligible tokens and curve stages, ranking metric and tie-breaks,
+  dethroning/refresh, graduation, data freshness/reorg handling and defenses
+  against manipulated inputs. Show an accessible, mobile retro featured area
+  only with clearly labeled sample data or authenticated live inputs. No paid
+  placement, invented leader, artificial migration delay, investment advice,
+  audited-safety implication or return guarantee follows from ranking.
+- Keep retro presentation tied to Beam's verified behavior, not a visual wrap
+  around PumpSwap. A plain-language "How it works" onboarding explanation
+  should use evidenced Beam configuration for graduation, LP custody/burn,
+  fees, launch allocations and availability. Do not copy historical threshold
+  numbers or assert no presale/team allocation, instant selling or LP burning
+  from a third-party screenshot.
+- Keep community discovery simple and give ongoing token communities a fair
+  chance to remain visible. Per-token comments or opt-in social features need
+  moderation, rate limits and anti-spam checks. Never use fake volume, wash
+  trades, automated buy bumps or raid spam to influence ranking or engagement;
+  historical status or follower counts alone do not establish legitimacy.
+  Preserve planned callouts without implying paid promotion is active. Disclose
+  a reward or airdrop's eligibility, funding and timing only after a reviewed
+  decision; the $BEAM flagship goal is not a promise to other communities.
+- The flagship $BEAM token is intended to launch on Beam, with a very high but
+  unquantified share of eligible protocol revenue intended for buybacks and
+  burns. No rate, mint, revenue denominator, budget, vault, authority or
+  automatic execution is approved. Define actually collected, spendable Beam
+  revenue separately from volume, creator entitlements, third-party fees and
+  reserved community rewards. Reconcile the goal with 42/5/3 bps and creator
+  funding; never double-count funds or overwrite the provisional holder and
+  buyback split. A claimed higher share than competitors, including Pump.fun,
+  needs comparable bases, periods and realized spending evidence. Do not
+  promise price appreciation or describe any buyback as active.
+- Support for communities around existing launched tokens is a separate goal
+  from flagship $BEAM buybacks. Keep per-token rewards/buybacks, creator fees,
+  operating allocations and any promotional spending in distinct, auditable
+  budgets from realized receipts. Never count one receipt twice. The balance
+  and any promotional policy are unapproved; do not ban callouts, authorize
+  new spending, or promise token survival or returns from this goal.
 
 ## Validation and review
 
