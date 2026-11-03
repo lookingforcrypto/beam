@@ -12,5 +12,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo test --locked
-      - run: cargo test --locked --features experimental-raydium
+      - run: cargo test --locked -- --test-threads=1
+      - run: cargo test --locked --features experimental-raydium -- --test-threads=1

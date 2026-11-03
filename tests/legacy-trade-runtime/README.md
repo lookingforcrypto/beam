@@ -7,12 +7,14 @@ processor, in the same way as the draft `tests/runtime-harness`.
 
 ```sh
 cd tests/legacy-trade-runtime
-cargo test --locked
-cargo test --locked --features experimental-raydium
+cargo test --locked -- --test-threads=1
+cargo test --locked --features experimental-raydium -- --test-threads=1
 ```
 
-It runs no SBF build, live network, wallet or deployed program. It is not a
-Beam fee path. The lockfile starts from the draft runtime harness's resolved
+The bank-heavy tests run serially so concurrent test banks do not compete for
+the same runner resources. This crate runs no SBF build, live network, wallet
+or deployed program. It is not a Beam fee path. The lockfile starts from the
+draft runtime harness's resolved
 versions. Only this package's name and its direct `anchor-spl` dependency
 differ.
 
