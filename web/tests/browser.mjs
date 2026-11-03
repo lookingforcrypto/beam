@@ -130,18 +130,114 @@ try {
   await until("!!document.querySelector('.site-shell')");
   const initialCopy = await evaluate("document.body.innerText");
   assert.match(initialCopy, /sample market data/i);
+  assert.equal(
+    await evaluate("document.querySelector('.market-badge')?.innerText.trim()"),
+    "Sample data — no chain source",
+  );
+  assert.match(initialCopy, /\[start a new coin\]/i);
+  assert.match(
+    initialCopy,
+    /Local draft preview only\. No token is created\./i,
+  );
+  assert.equal(
+    await evaluate(
+      "getComputedStyle(document.querySelector('#hill-preview-title')).fontStyle",
+    ),
+    "italic",
+  );
   assert.match(initialCopy, /Raydium AMM v4/i);
   assert.match(
     initialCopy,
     /0\.42% community \/ 0\.05% treasury \/ 0\.03% founder/,
   );
   assert.doesNotMatch(initialCopy, /CPMM|durable liquidity|lasting liquidity/i);
+  assert.match(
+    initialCopy,
+    /Planned creator take: 0\.35% of curve notional from the community share; inactive/i,
+  );
+  assert.doesNotMatch(
+    initialCopy,
+    /creator payout funding (pending|undecided)/i,
+  );
+  await evaluate(
+    "[...document.querySelectorAll('button')].find(b => b.textContent.includes('How it works')).click()",
+  );
+  await until("!!document.querySelector('[role=dialog] .how-steps')");
+  const howCopy = await evaluate(
+    "document.querySelector('[role=dialog]').innerText",
+  );
+  assert.match(howCopy, /creator take is 0\.35% of curve notional/i);
+  assert.match(howCopy, /nominal 0\.07% for other community uses/i);
+  assert.match(howCopy, /not an all-in trade quote/i);
+  assert.match(howCopy, /burn the LP it receives at graduation/i);
+  assert.match(howCopy, /no ongoing LP-fee claim/i);
+  assert.match(howCopy, /no new Beam fee after graduation/i);
+  assert.match(howCopy, /curve creator balance should remain claimable/i);
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Escape",
+    code: "Escape",
+    windowsVirtualKeyCode: 27,
+  });
+  await until("!document.querySelector('[role=dialog]')");
   const hillCopy = await evaluate(
     "document.querySelector('.hill-preview')?.innerText",
   );
   assert.match(hillCopy, /King of the Hill/i);
   assert.match(hillCopy, /No live leader/i);
   assert.match(hillCopy, /sample tokens below are not ranked/i);
+
+  // Discovery tabs expose one keyboard stop, their panel, and live result count.
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('.feed-tabs [tabindex=\"0\"]').length",
+    ),
+    1,
+  );
+  await evaluate("document.getElementById('feed-tab-trending').focus()");
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "ArrowRight",
+    code: "ArrowRight",
+    windowsVirtualKeyCode: 39,
+  });
+  await until(
+    "document.activeElement?.id === 'feed-tab-new' && document.getElementById('feed-panel')?.getAttribute('aria-labelledby') === 'feed-tab-new'",
+  );
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "End",
+    code: "End",
+    windowsVirtualKeyCode: 35,
+  });
+  await until(
+    "document.activeElement?.id === 'feed-tab-watchlist' && document.querySelector('.market-section [role=status]')?.textContent.includes('0 items in the watchlist feed')",
+  );
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "Home",
+    code: "Home",
+    windowsVirtualKeyCode: 36,
+  });
+  await until("document.activeElement?.id === 'feed-tab-trending'");
+  assert.equal(
+    await evaluate(
+      "document.querySelectorAll('.feed-tabs [aria-selected=\"true\"]').length",
+    ),
+    1,
+  );
+  await evaluate(
+    "document.querySelector('button[aria-label=\"List view\"]').click()",
+  );
+  await until(
+    "document.querySelector('button[aria-label=\"List view\"]')?.getAttribute('aria-pressed') === 'true'",
+  );
+  assert.equal(
+    await evaluate(
+      "document.querySelector('button[aria-label=\"Grid view\"]')?.getAttribute('aria-pressed')",
+    ),
+    "false",
+  );
 
   // A malformed watchlist must not prevent React from rendering on reload.
   await evaluate(
@@ -206,6 +302,18 @@ try {
     ),
     1,
   );
+  assert.match(
+    await evaluate(
+      "document.querySelector('[role=dialog] .draft-lifecycle')?.textContent",
+    ),
+    /no token minted or curve started/i,
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('[role=dialog] .detail-chart, [role=dialog] .detail-stats, [role=dialog] .detail-progress')",
+    ),
+    false,
+  );
   await send("Input.dispatchKeyEvent", {
     type: "keyDown",
     key: "Escape",
@@ -225,6 +333,42 @@ try {
     ),
     "View First Draft",
   );
+  assert.match(
+    await evaluate(
+      "document.querySelector('.token-card .draft-lifecycle')?.textContent",
+    ),
+    /no token minted or curve started/i,
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('.token-card .chart-wrap, .token-card .card-metrics, .token-card .card-progress')",
+    ),
+    true,
+    "sample tokens still retain their illustrative metrics",
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('.token-card:first-child .chart-wrap, .token-card:first-child .card-metrics, .token-card:first-child .card-progress')",
+    ),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-graduating').click()");
+  await until(
+    "document.querySelector('.market-section [role=status]')?.textContent.includes('8 items in the graduating feed')",
+  );
+  assert.equal(
+    await evaluate("!!document.querySelector('.token-card .draft-lifecycle')"),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-trending').click()");
+  await until(
+    "document.querySelector('.market-section [role=status]')?.textContent.includes('8 items in the trending feed')",
+  );
+  assert.equal(
+    await evaluate("!!document.querySelector('.token-card .draft-lifecycle')"),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-new').click()");
   await evaluate(
     "document.querySelector('button[aria-label=\"Add First Draft to watchlist\"]').click()",
   );
@@ -233,6 +377,10 @@ try {
   );
   await send("Page.reload", { ignoreCache: true });
   await until("!!document.querySelector('.site-shell')");
+  await evaluate("document.getElementById('feed-tab-new').click()");
+  await until(
+    "document.querySelector('.token-card .card-open')?.getAttribute('aria-label') === 'View First Draft'",
+  );
   assert.equal(
     await evaluate(
       "document.querySelector('.token-card .card-open')?.getAttribute('aria-label')",

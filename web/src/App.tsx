@@ -1,4 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import {
   Activity,
   ArrowRight,
@@ -24,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { sampleTokens, type Token } from "./data";
+import { dataLabel, sampleState } from "./indexerAdapter";
 import {
   getBrowserStorage,
   nextDraftId,
@@ -40,6 +48,11 @@ import {
 
 type Feed = "trending" | "new" | "graduating" | "watchlist";
 type Modal = "create" | "wallet" | "how" | null;
+const feedOrder: Feed[] = ["trending", "new", "graduating", "watchlist"];
+
+// The preview has no authenticated indexer feed. Keep its cards in sample state.
+const marketData = sampleState(sampleTokens);
+const marketDataLabel = dataLabel(marketData, Date.now(), 30_000);
 
 function draftToken(draft: DraftRecord): Token {
   const minutes = Math.max(
@@ -173,44 +186,54 @@ function TokenCard({
             <p>{token.description}</p>
           </div>
         </div>
-        <div className="chart-wrap">
-          <MiniChart negative={token.change < 0} />
-        </div>
-        <div className="card-metrics">
-          <div>
-            <span>Market cap</span>
-            <strong>{token.marketCap}</strong>
-          </div>
-          <div>
-            <span>24h volume</span>
-            <strong>{token.volume}</strong>
-          </div>
-          <div>
-            <span>Change</span>
-            <strong className={token.change < 0 ? "down" : "up"}>
-              {token.change > 0 ? "+" : ""}
-              {token.change}%
-            </strong>
-          </div>
-        </div>
-        <div className="card-progress">
-          <div className="progress-copy">
-            <span>Sample curve progress</span>
-            <strong>{token.progress}%</strong>
-          </div>
-          <div className="progress-track">
-            <span style={{ width: `${token.progress}%` }} />
-          </div>
-        </div>
+        {token.isDraft ? (
+          <p className="draft-lifecycle">
+            Browser draft · No token minted or curve started
+          </p>
+        ) : (
+          <>
+            <div className="chart-wrap">
+              <MiniChart negative={token.change < 0} />
+            </div>
+            <div className="card-metrics">
+              <div>
+                <span>Market cap</span>
+                <strong>{token.marketCap}</strong>
+              </div>
+              <div>
+                <span>24h volume</span>
+                <strong>{token.volume}</strong>
+              </div>
+              <div>
+                <span>Change</span>
+                <strong className={token.change < 0 ? "down" : "up"}>
+                  {token.change > 0 ? "+" : ""}
+                  {token.change}%
+                </strong>
+              </div>
+            </div>
+            <div className="card-progress">
+              <div className="progress-copy">
+                <span>Sample curve progress</span>
+                <strong>{token.progress}%</strong>
+              </div>
+              <div className="progress-track">
+                <span style={{ width: `${token.progress}%` }} />
+              </div>
+            </div>
+          </>
+        )}
       </button>
       <div className="card-foot">
         <span>
           <Clock3 size={13} />{" "}
           {token.age === "now" ? "just now" : `${token.age} ago`}
         </span>
-        <span>
-          <Users size={13} /> {token.holders} holders
-        </span>
+        {!token.isDraft && (
+          <span>
+            <Users size={13} /> {token.holders} holders
+          </span>
+        )}
         {token.isDraft && <span className="draft-pill">Local draft</span>}
         <button
           className={`save-button ${saved ? "saved" : ""}`}
@@ -336,11 +359,14 @@ function App() {
 
   const tokens = useMemo(() => {
     const draftTokens = drafts.map(draftToken);
-    let result = orderNewFeed(draftTokens, sampleTokens);
+    let result = orderNewFeed(draftTokens, [...marketData.records]);
     if (feed === "watchlist")
       result = result.filter((token) => saved.includes(token.id));
+    if (feed === "trending") result = result.filter((token) => !token.isDraft);
     if (feed === "graduating")
-      result = [...result].sort((a, b) => b.progress - a.progress);
+      result = result
+        .filter((token) => !token.isDraft)
+        .sort((a, b) => b.progress - a.progress);
     const query = search.trim().toLowerCase();
     if (query)
       result = result.filter((token) =>
@@ -353,6 +379,32 @@ function App() {
 
   const toggleSaved = (id: string) =>
     setSaved((current) => toggleWatchlist(current, id));
+  const onFeedKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const current = feedOrder.indexOf(
+      (event.target as HTMLButtonElement).dataset.feed as Feed,
+    );
+    if (current < 0) return;
+    let next: Feed;
+    switch (event.key) {
+      case "ArrowRight":
+        next = feedOrder[(current + 1) % feedOrder.length];
+        break;
+      case "ArrowLeft":
+        next = feedOrder[(current - 1 + feedOrder.length) % feedOrder.length];
+        break;
+      case "Home":
+        next = feedOrder[0];
+        break;
+      case "End":
+        next = feedOrder[feedOrder.length - 1];
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setFeed(next);
+    document.getElementById(`feed-tab-${next}`)?.focus();
+  };
   const openExplore = () =>
     document.getElementById("explore")?.scrollIntoView({ behavior: "smooth" });
 
@@ -491,10 +543,12 @@ function App() {
             </p>
             <div className="hero-actions">
               <button
-                className="btn btn-primary btn-large"
+                className="btn btn-primary btn-large hero-start"
+                aria-label="Start a new coin draft preview"
+                aria-describedby="hero-start-note"
                 onClick={() => setModal("create")}
               >
-                Create a token <ArrowUpRight size={18} />
+                [start a new coin] <ArrowUpRight size={18} />
               </button>
               <button
                 className="btn btn-secondary btn-large"
@@ -503,6 +557,9 @@ function App() {
                 Explore launches <ArrowRight size={18} />
               </button>
             </div>
+            <p id="hero-start-note" className="hero-start-note">
+              Local draft preview only. No token is created.
+            </p>
             <div className="hero-proof">
               <span className="proof-icon">
                 <ShieldCheck size={15} />
@@ -510,8 +567,9 @@ function App() {
               <span>Built for a clearer path to Raydium</span>
               <span className="proof-divider" />
               <span>
-                Planned Beam fee: 0.42% community / 0.05% treasury / 0.03%
-                founder; creator payout funding pending
+                Planned Beam allocation: 0.42% community / 0.05% treasury /
+                0.03% founder. Planned creator take: 0.35% of curve notional
+                from the community share; inactive.
               </span>
             </div>
           </div>
@@ -606,38 +664,59 @@ function App() {
               <p>Explore communities taking shape on Beam.</p>
             </div>
             <div className="market-badge">
-              <Activity size={16} /> Sample market view
+              <Activity size={16} /> {marketDataLabel}
             </div>
           </div>
           <div className="market-toolbar">
-            <div className="feed-tabs" role="tablist" aria-label="Token feed">
+            <div
+              className="feed-tabs"
+              role="tablist"
+              aria-label="Token feed"
+              onKeyDown={onFeedKeyDown}
+            >
               <button
+                id="feed-tab-trending"
+                data-feed="trending"
                 role="tab"
                 aria-selected={feed === "trending"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "trending" ? 0 : -1}
                 className={feed === "trending" ? "active" : ""}
                 onClick={() => setFeed("trending")}
               >
                 <Flame size={16} /> Trending
               </button>
               <button
+                id="feed-tab-new"
+                data-feed="new"
                 role="tab"
                 aria-selected={feed === "new"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "new" ? 0 : -1}
                 className={feed === "new" ? "active" : ""}
                 onClick={() => setFeed("new")}
               >
                 <Clock3 size={16} /> New
               </button>
               <button
+                id="feed-tab-graduating"
+                data-feed="graduating"
                 role="tab"
                 aria-selected={feed === "graduating"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "graduating" ? 0 : -1}
                 className={feed === "graduating" ? "active" : ""}
                 onClick={() => setFeed("graduating")}
               >
                 <Zap size={16} /> Graduating
               </button>
               <button
+                id="feed-tab-watchlist"
+                data-feed="watchlist"
                 role="tab"
                 aria-selected={feed === "watchlist"}
+                aria-controls="feed-panel"
+                tabIndex={feed === "watchlist" ? 0 : -1}
                 className={feed === "watchlist" ? "active" : ""}
                 onClick={() => setFeed("watchlist")}
               >
@@ -659,6 +738,7 @@ function App() {
                   className={view === "grid" ? "selected" : ""}
                   onClick={() => setView("grid")}
                   aria-label="Grid view"
+                  aria-pressed={view === "grid"}
                 >
                   <Grid2X2 size={17} />
                 </button>
@@ -666,40 +746,55 @@ function App() {
                   className={view === "list" ? "selected" : ""}
                   onClick={() => setView("list")}
                   aria-label="List view"
+                  aria-pressed={view === "list"}
                 >
                   <List size={18} />
                 </button>
               </div>
             </div>
           </div>
-          {tokens.length > 0 ? (
-            <div className={`token-grid ${view === "list" ? "list-view" : ""}`}>
-              {tokens.map((token) => (
-                <TokenCard
-                  key={token.id}
-                  token={token}
-                  saved={saved.includes(token.id)}
-                  onOpen={() => setSelected(token)}
-                  onSave={() => toggleSaved(token.id)}
-                  view={view}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <Compass size={28} />
-              <h3>
-                {feed === "watchlist" && !search
-                  ? "Your watchlist is empty"
-                  : "No tokens found"}
-              </h3>
-              <p>
-                {feed === "watchlist" && !search
-                  ? "Tap the heart on a token to save it here."
-                  : "Try another name or symbol."}
-              </p>
-            </div>
-          )}
+          <p className="sr-only" role="status" aria-live="polite">
+            {tokens.length} {tokens.length === 1 ? "item" : "items"} in the{" "}
+            {feed} feed
+            {search.trim() ? ` matching ${search.trim()}` : ""}.
+          </p>
+          <div
+            id="feed-panel"
+            role="tabpanel"
+            aria-labelledby={`feed-tab-${feed}`}
+            tabIndex={0}
+          >
+            {tokens.length > 0 ? (
+              <div
+                className={`token-grid ${view === "list" ? "list-view" : ""}`}
+              >
+                {tokens.map((token) => (
+                  <TokenCard
+                    key={token.id}
+                    token={token}
+                    saved={saved.includes(token.id)}
+                    onOpen={() => setSelected(token)}
+                    onSave={() => toggleSaved(token.id)}
+                    view={view}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <Compass size={28} />
+                <h3>
+                  {feed === "watchlist" && !search
+                    ? "Your watchlist is empty"
+                    : "No tokens found"}
+                </h3>
+                <p>
+                  {feed === "watchlist" && !search
+                    ? "Tap the heart on a token to save it here."
+                    : "Try another name or symbol."}
+                </p>
+              </div>
+            )}
+          </div>
         </section>
 
         <section className="closing-cta container">
@@ -829,26 +924,34 @@ function App() {
                       )}
                     </div>
                   )}
-                <div className="detail-chart">
-                  <MiniChart negative={selected.change < 0} />
-                </div>
-                <div className="detail-stats">
-                  <div>
-                    <span>Market cap</span>
-                    <strong>{selected.marketCap}</strong>
-                  </div>
-                  <div>
-                    <span>Holders</span>
-                    <strong>{selected.holders}</strong>
-                  </div>
-                  <div>
-                    <span>Curve progress</span>
-                    <strong>{selected.progress}%</strong>
-                  </div>
-                </div>
-                <div className="detail-progress">
-                  <span style={{ width: `${selected.progress}%` }} />
-                </div>
+                {selected.isDraft ? (
+                  <p className="draft-lifecycle">
+                    Browser draft · No token minted or curve started
+                  </p>
+                ) : (
+                  <>
+                    <div className="detail-chart">
+                      <MiniChart negative={selected.change < 0} />
+                    </div>
+                    <div className="detail-stats">
+                      <div>
+                        <span>Market cap</span>
+                        <strong>{selected.marketCap}</strong>
+                      </div>
+                      <div>
+                        <span>Holders</span>
+                        <strong>{selected.holders}</strong>
+                      </div>
+                      <div>
+                        <span>Curve progress</span>
+                        <strong>{selected.progress}%</strong>
+                      </div>
+                    </div>
+                    <div className="detail-progress">
+                      <span style={{ width: `${selected.progress}%` }} />
+                    </div>
+                  </>
+                )}
                 <div className="unavailable-note">
                   <LockKeyhole size={18} />
                   <span>
@@ -1056,10 +1159,13 @@ function App() {
                     <div>
                       <h3>Grow</h3>
                       <p>
-                        The specified Beam allocation is 0.50%: 0.42% for the
-                        community bucket, 0.05% treasury, and 0.03% founder.
-                        Creator payout funding is undecided. Collection and
-                        distribution are not active in this preview.
+                        The proposed Beam component is 0.50% nominal: 0.42%
+                        community (including creator payouts), 0.05% treasury,
+                        and 0.03% founder. The selected creator take is 0.35% of
+                        curve notional from the community share, leaving a
+                        nominal 0.07% for other community uses. This is not an
+                        all-in trade quote; collection and distribution are
+                        inactive.
                       </p>
                     </div>
                     <ChevronRight size={18} />
@@ -1072,6 +1178,12 @@ function App() {
                         Curve completion and migration are distinct states.
                         Raydium AMM v4 is selected, but its adapter is not
                         integrated here and this preview cannot create a pool.
+                        Beam plans to burn the LP it receives at graduation;
+                        that implementation remains in draft and gives Beam no
+                        ongoing LP-fee claim. The selected historical model adds
+                        no new Beam fee after graduation; an unclaimed curve
+                        creator balance should remain claimable once the payout
+                        path exists.
                       </p>
                     </div>
                     <ChevronRight size={18} />

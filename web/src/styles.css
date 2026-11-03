@@ -47,6 +47,17 @@ p {
   background: #774eff;
   color: white;
 }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .site-shell {
   position: relative;
   min-height: 100vh;
@@ -802,6 +813,24 @@ textarea:focus-visible {
 }
 .card-progress {
   margin-top: 20px;
+}
+.draft-lifecycle {
+  color: #b9c7e9;
+  background: #171e38;
+  border: 1px solid #35446f;
+  border-radius: 9px;
+  padding: 14px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.card-open .draft-lifecycle {
+  display: flex;
+  align-items: center;
+  min-height: 150px;
+  margin: 10px 0 0;
+}
+.modal-panel .draft-lifecycle {
+  margin: 16px 0 20px;
 }
 .progress-copy {
   display: flex;

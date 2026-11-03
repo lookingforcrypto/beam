@@ -7,12 +7,14 @@ processor, in the same way as the draft `tests/runtime-harness`.
 
 ```sh
 cd tests/legacy-trade-runtime
-cargo test --locked
-cargo test --locked --features experimental-raydium
+cargo test --locked -- --test-threads=1
+cargo test --locked --features experimental-raydium -- --test-threads=1
 ```
 
-It runs no SBF build, live network, wallet or deployed program. It is not a
-Beam fee path. The lockfile starts from the draft runtime harness's resolved
+The bank-heavy tests run serially so concurrent test banks do not compete for
+the same runner resources. This crate runs no SBF build, live network, wallet
+or deployed program. It is not a Beam fee path. The lockfile starts from the
+draft runtime harness's resolved
 versions. Only this package's name and its direct `anchor-spl` dependency
 differ.
 
@@ -107,6 +109,9 @@ differ.
    - **Small fees wait in the vault.** A fee too small to make a new creator
      account rent-exempt is not paid out and is not lost: it stays in the
      vault and is paid with the next larger accrual.
+   - Each third-party claim uses a fresh blockhash, so repeated identical
+     claims execute independently instead of reusing a cached transaction
+     result. This also makes the empty-vault no-op exercise the handler again.
    - A creator account owned by the inherited fee program (a vault migrated
      to a sharing config) is refused with
      `UnableToDistributeCreatorVaultMigratedToSharingConfig`, and the vault

@@ -181,7 +181,10 @@ async fn trades_reject_missing_remaining_accounts_and_substituted_recipients() {
 impl Bank {
     /// Signed only by the test payer: neither the creator nor the trader signs.
     async fn send_as_third_party(&mut self, instruction: Instruction) -> Result<(), solana_program_test::BanksClientError> {
-        let blockhash = self.ctx.banks_client.get_latest_blockhash().await.unwrap();
+        // Identical claims signed with one blockhash have the same signature.
+        // A cached successful deferred claim must not stand in for the later
+        // claim after more fees accrue (or for the empty-vault no-op).
+        let blockhash = self.ctx.get_new_latest_blockhash().await.expect("fresh claim blockhash");
         let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(
             &[instruction], Some(&self.ctx.payer.pubkey()), &[&self.ctx.payer], blockhash,
         );

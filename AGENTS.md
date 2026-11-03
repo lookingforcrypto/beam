@@ -6,13 +6,51 @@ additional archive restrictions. Do not alter the pinned archive for Beam work.
 
 ## Start with the current work
 
-As of the 1 November 2026 maintainer check, Beam's Slop listing was paused
-with a security scan queued. Its current state was not verifiable on
-2 November 2026. The maintainer has since explicitly resumed Beam development
-in the cloud workspace; this does **not** establish Slop clearance or make a
-listed task available. Check current PR ownership and maintainer direction
-before work. Neither a Slop state change nor automatic task closure approves
-a GitHub PR.
+Before starting, verify current maintainer direction, task ownership, target
+branch, and contribution terms. Apply explicit owner decisions recorded below
+before older task snapshots or draft PR prose. Merged code establishes what is
+implemented; an open PR establishes only proposed work. If evidence conflicts,
+record the conflict in the draft PR and keep the affected behavior disabled
+until the owner resolves it. Dated status notes and task ledger entries are
+not assignments or approval. A draft PR or passing test does not authorize a
+merge or release.
+
+## Current owner decisions and unset values
+
+The owner's 3 November 2026 direction supersedes older draft prose and dated
+task snapshots. Beam should evoke the simple pre-PumpSwap launch experience:
+create, trade on a visible bonding curve, discover active communities, and
+graduate to Raydium AMM v4. This is a product direction, not a claim that the
+website, trading client, ranking service, or migration is already live or
+identical to Pump.fun. Check current code and PRs before describing availability.
+
+- The planned ordinary Beam allocation is 42/5/3 nominal basis points for
+  community/treasury/founder. Creator payouts come **out of the 42-bps
+  community share**. The selected creator rate is **35 bps of curve-trade
+  notional**, leaving a nominal 7 bps for other community uses. Use the same
+  quote-amount input as `beam_economics::allocate`; calculate the creator
+  amount as `floor(quote_amount * 35 / 10,000)`, bounded by the actually
+  allocated community amount. This rate is product policy, not an implemented
+  fee route or an all-in quote. Do not add a separate creator charge or wire
+  live distribution until recipient, custody, rounding, dust, and conservation
+  behavior are implemented and tested on the actual trade path.
+- At AMM v4 graduation, burn all LP issued to Beam in the same transaction,
+  following the selected historical Raydium pattern. Draft [PR #68](https://github.com/shawkkkkk/beam/pull/68)
+  implements a gated adapter and draft [PR #72](https://github.com/shawkkkkk/beam/pull/72)
+  adds the burn; neither is merged or activated. Burning LP relinquishes
+  Beam's claim to ongoing AMM v4 LP fees. The selected historical model adds
+  **no Beam fee on post-graduation AMM v4 trades**. An unclaimed curve creator
+  balance should remain claimable after graduation, but graduation creates no
+  new Beam creator, community, or buyback revenue. Do not promise recurring
+  payments from the burned position.
+- Community-remainder distribution, Token-2022 graduation, non-SOL graduation,
+  fee vault authorities,
+  flagship mint/buyback policy, charity design, general pairing support, and
+  repository-root license remain unset or unimplemented as described in the
+  current code and [economics guide](docs/ECONOMICS.md). Do not fill gaps from
+  competitor terms, archived code, sample data, or an unmerged PR. Keep any
+  path that depends on an unset decision disabled; name the exact blocker in
+  the draft PR and request a reviewed owner decision before activation.
 
 1. Read `README.md`, `docs/STATUS.md`, `docs/ECONOMICS.md`, `docs/TASKS.md`,
    and `CONTRIBUTING.md`. Check the working tree, remote branches, and open
@@ -20,14 +58,17 @@ a GitHub PR.
 2. Use `programs/beam` as the editable Anchor program. Its retained Pump Main
    modules, Beam policy/economics/Raydium modules, and compatibility tests are
    the contract baseline. Do not start a second launchpad implementation.
-3. Claim one bounded lane after checking its open PRs. Record scope, base
-   commit, intended behavior, tests, and remaining risks in the PR description.
-   Check `docs/TASKS.md` and active pull requests to avoid duplicate work.
+3. Claim one bounded lane after checking its open PRs. Recheck the target
+   branch and open PRs for overlap before submitting. Record scope, base commit,
+   intended behavior, tests, and remaining risks in the PR description. Check
+   `docs/TASKS.md` and active pull requests to avoid duplicate work.
    External contributors can follow the [fork-to-PR guide](CONTRIBUTING.md#contribute-from-a-fork)
    without direct write access to Beam.
 4. Work in a separate branch. Do not rewrite another contributor's branch or
    merge competing architectures or fee policies without a reviewed decision.
-5. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
+5. Before substantial external contributions, confirm the repository's license
+   and contribution terms; archived source notices do not license new Beam code.
+6. For website and backend work, choose a bounded lane in `docs/TASKS.md`.
    Define the interface, data source, authorization boundary, acceptance
    behavior, and local tests before enabling an external action. Use public
    behavior/docs for compatibility research, not private source or credential
@@ -49,14 +90,15 @@ a GitHub PR.
   them to PumpSwap or claim that the retained quote-chain code routes through
   Raydium.
 - The existing Raydium CPMM migration is a gated, superseded candidate. The
-  user chose Raydium AMM v4; build and verify that adapter separately before
-  activation. Current LP burning does not leave Beam an LP fee claim for
-  recurring buybacks. Principal custody and fee rights remain unresolved.
+  user chose Raydium AMM v4 and burning Beam-received LP; verify the draft
+  adapter, pool state, burn, replay and rollback before activation. Burned LP
+  cannot be withdrawn by Beam or harvested for recurring LP fees.
 - Durable liquidity is a product goal, not a consequence proved by choosing
   AMM v4. Compare initial and continuing depth, LP ownership/control and
   withdrawal rights, lock/burn tradeoffs, slippage at comparable trade sizes,
-  and post-graduation pool behavior. Do not pick an LP scheme or promise chart
-  resilience from historical Raydium-versus-PumpSwap anecdotes; comparable
+  and post-graduation pool behavior. Treat the selected LP burn as binding
+  unless the owner changes it; do not promise chart resilience from historical
+  Raydium-versus-PumpSwap anecdotes. Comparable
   liquidity and market-period evidence is required to test that hypothesis.
 - `beam_economics.rs` contains provisional fee-allocation arithmetic; the
   inherited Pump fee CPI still governs real trade collection. The community
@@ -64,9 +106,10 @@ a GitHub PR.
   eligibility, the flagship mint, vaults, and distribution rules are open.
   The user's Beam fee split is 42/5/3 nominal basis points for community,
   treasury and founder. Preserve the creator payout and creator-selected
-  wallet system. Whether its fee comes from the community share or an
-  additional charge remains undecided; do not assume either. Disclose each
-  applicable curve, creator, migration, and Raydium pool fee; never promise returns.
+  wallet system. Creator payouts must come from the 42-bps community share;
+  the selected curve creator rate is 35 bps of notional, pending implementation
+  and tests. Disclose each applicable curve,
+  creator, migration, and Raydium pool fee; never promise returns.
 - On-chain reconstruction does not provide Pump's website, streaming, callout,
   or charity service backends. Treat those as independent feature work with
   authorized providers; never imply their behavior is byte-identical. The
@@ -106,8 +149,9 @@ a GitHub PR.
   around PumpSwap. A plain-language "How it works" onboarding explanation
   should use evidenced Beam configuration for graduation, LP custody/burn,
   fees, launch allocations and availability. Do not copy historical threshold
-  numbers or assert no presale/team allocation, instant selling or LP burning
-  from a third-party screenshot.
+  numbers or assert no presale/team allocation or instant selling from a
+  third-party screenshot. Describe LP burning as the selected but unmerged
+  Beam policy until its migration PRs land and are validated.
 - Keep community discovery simple and give ongoing token communities a fair
   chance to remain visible. Per-token comments or opt-in social features need
   moderation, rate limits and anti-spam checks. Never use fake volume, wash
@@ -156,11 +200,16 @@ trade, move funds, collect secrets, or launch live services in a pull request.
 A release requires a separate maintainer-controlled process. Respect branch
 protections and leave unresolved or untested work in draft state. Before any
 merge, follow the [maintainer review sequence](CONTRIBUTING.md#maintainer-review-and-merge)
-on the exact head and combined target tree, and satisfy required formal
-approvals. Do not self-approve or bypass repository rules.
+on the exact head and combined target tree, and satisfy any formal approvals
+required by the current branch rule. `main` currently has no mandatory
+approval count; this does not replace the owner's review. Do not self-approve
+or bypass repository rules.
 
-If Beam is registered on Slop, report a suspected exploitable issue through
-Slop's current private security-report workflow. Otherwise use GitHub private
-vulnerability reporting if available. If neither private route exists, wait
-for a private maintainer route. Never publish findings or sensitive data in a
-public issue or pull request.
+The owner can queue a reviewed, ready PR for GitHub's protected-branch
+auto-merge with the `merge-when-ready` label. Follow
+[the auto-merge guide](docs/AUTO_MERGE.md); the label does not replace exact-head
+review, required checks, or the separate release decision.
+
+Use GitHub private vulnerability reporting for suspected exploitable issues if
+available. If it is unavailable, wait for a private maintainer route. Never
+publish findings or sensitive data in a public issue or pull request.

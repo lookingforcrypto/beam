@@ -1,24 +1,25 @@
 # Low-usage PR review proposal
 
-The accompanying workflow runs only when a maintainer manually dispatches it.
-It has read permissions and does not approve, mark ready, enable auto-merge,
-merge, label, comment, or change repository settings. Adding this workflow to
-`main` does not enable auto-merge. Feature development and live deployment
-remain paused.
+The accompanying snapshot workflow runs only when a maintainer manually
+dispatches it. It has read permissions and does not approve, mark ready,
+merge, label, comment, or change repository settings. The separate
+[`merge-when-ready.yml`](../.github/workflows/merge-when-ready.yml) workflow
+handles owner opt-in to native auto-merge. Neither workflow deploys Beam.
 
-## Current repository facts (2 November 2026)
+## Current repository facts (3 November 2026)
 
-- `shawkkkkk/beam` is public. The repository API reports
-  `allow_auto_merge: false`; native auto-merge is currently disabled.
-- The maintainer reports no rules on `main`. The read-only rulesets endpoint
-  returned an empty list; the connected GitHub App received `403 Resource not
-  accessible by integration` for main's branch-protection endpoint. The App
-  therefore cannot independently verify that report or a merge-queue policy.
+- `shawkkkkk/beam` is public and native auto-merge is enabled. The owner set a
+  classic `main` protection rule with required hosted checks, branch freshness,
+  resolved conversations, and no administrator bypass. See
+  [AUTO_MERGE.md](AUTO_MERGE.md) for the exact checks and opt-in procedure.
+- The connected GitHub App still cannot read the classic branch-protection
+  endpoint; the rule was verified in the owner's GitHub settings. The read-only
+  rulesets endpoint is empty. No merge queue is configured.
 - Existing workflows are contract, website, native SDK/service, and AMM v4
   local-validator tests. They request read permissions. Website browser tests
   are separate from hosted website CI; a green check is not full product
   validation.
-- The repository owner is `shawkkkkk`. This proposal creates no bot account,
+- The repository owner is `shawkkkkk`. Neither workflow creates a bot account,
   personal token, GitHub App installation, or secret.
 
 ## What the read-only workflow supplies
@@ -32,30 +33,18 @@ or review count as approval. API results are a point-in-time snapshot; a new
 head invalidates any previous assessment. The first-page cap also means the
 summary cannot prove every check or review was inspected.
 
-## Activation decision, separately required
+## Separate merge automation
 
-The least complex future route is GitHub's native auto-merge after maintainers
-add and verify a protection policy with required human review and the exact
-relevant status checks. GitHub says native auto-merge waits for those
-requirements; the repository setting must be enabled first. Do not assume a
-merge queue is configured for this personal repository. If a PR changes
-contract funds, fees, authorization, workflows, migrations, or dependency
-trust, require deliberate human review of its combined tree and applicable
-runtime tests.
+The owner-only `merge-when-ready` label triggers a separate privileged workflow
+that rechecks the PR head and delegates timing to GitHub's protected-branch
+auto-merge. Its workflow file comes from the trusted base branch; it never
+checks out PR code. The label must be applied after reviewing the exact head
+and combined tree. Contract funds, fees, authorization, workflows, migrations,
+and dependency trust need deliberate human review and applicable runtime tests.
+`gh pr merge --match-head-commit` guards the enablement action; branch
+protection supplies the continuing merge gates. See [AUTO_MERGE.md](AUTO_MERGE.md).
 
-If maintainers later want an event-driven *report*, a separately reviewed
-change could use `pull_request` events without write permission. If they want
-a workflow to *enable* auto-merge, that requires a separate action-time
-approval for `pull-requests: write`, a trusted event design, repository
-auto-merge setting, and verified protection rules. Never run or check out
-untrusted PR code in a privileged workflow. Do not add `pull_request_target`
-for this read-only task; GitHub documents its elevated trust and current
-public-repository event-policy limits. `gh pr merge --match-head-commit` is an
-immediate race guard for one action, not a permanent pin on later native
-auto-merge. A new head must be reviewed again.
-
-Slop automatic task closure is unrelated to GitHub approval or merging. No
-workflow should self-approve, bypass protections, use admin override, silently
+No workflow should self-approve, bypass protections, use admin override, silently
 merge a draft, or infer production readiness from source/host/mock checks.
 
 References: [GitHub native auto-merge](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/automatically-merging-a-pull-request),
