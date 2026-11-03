@@ -814,6 +814,24 @@ textarea:focus-visible {
 .card-progress {
   margin-top: 20px;
 }
+.draft-lifecycle {
+  color: #b9c7e9;
+  background: #171e38;
+  border: 1px solid #35446f;
+  border-radius: 9px;
+  padding: 14px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.card-open .draft-lifecycle {
+  display: flex;
+  align-items: center;
+  min-height: 150px;
+  margin: 10px 0 0;
+}
+.modal-panel .draft-lifecycle {
+  margin: 16px 0 20px;
+}
 .progress-copy {
   display: flex;
   justify-content: space-between;

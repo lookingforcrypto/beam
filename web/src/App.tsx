@@ -186,44 +186,54 @@ function TokenCard({
             <p>{token.description}</p>
           </div>
         </div>
-        <div className="chart-wrap">
-          <MiniChart negative={token.change < 0} />
-        </div>
-        <div className="card-metrics">
-          <div>
-            <span>Market cap</span>
-            <strong>{token.marketCap}</strong>
-          </div>
-          <div>
-            <span>24h volume</span>
-            <strong>{token.volume}</strong>
-          </div>
-          <div>
-            <span>Change</span>
-            <strong className={token.change < 0 ? "down" : "up"}>
-              {token.change > 0 ? "+" : ""}
-              {token.change}%
-            </strong>
-          </div>
-        </div>
-        <div className="card-progress">
-          <div className="progress-copy">
-            <span>Sample curve progress</span>
-            <strong>{token.progress}%</strong>
-          </div>
-          <div className="progress-track">
-            <span style={{ width: `${token.progress}%` }} />
-          </div>
-        </div>
+        {token.isDraft ? (
+          <p className="draft-lifecycle">
+            Browser draft · No token minted or curve started
+          </p>
+        ) : (
+          <>
+            <div className="chart-wrap">
+              <MiniChart negative={token.change < 0} />
+            </div>
+            <div className="card-metrics">
+              <div>
+                <span>Market cap</span>
+                <strong>{token.marketCap}</strong>
+              </div>
+              <div>
+                <span>24h volume</span>
+                <strong>{token.volume}</strong>
+              </div>
+              <div>
+                <span>Change</span>
+                <strong className={token.change < 0 ? "down" : "up"}>
+                  {token.change > 0 ? "+" : ""}
+                  {token.change}%
+                </strong>
+              </div>
+            </div>
+            <div className="card-progress">
+              <div className="progress-copy">
+                <span>Sample curve progress</span>
+                <strong>{token.progress}%</strong>
+              </div>
+              <div className="progress-track">
+                <span style={{ width: `${token.progress}%` }} />
+              </div>
+            </div>
+          </>
+        )}
       </button>
       <div className="card-foot">
         <span>
           <Clock3 size={13} />{" "}
           {token.age === "now" ? "just now" : `${token.age} ago`}
         </span>
-        <span>
-          <Users size={13} /> {token.holders} holders
-        </span>
+        {!token.isDraft && (
+          <span>
+            <Users size={13} /> {token.holders} holders
+          </span>
+        )}
         {token.isDraft && <span className="draft-pill">Local draft</span>}
         <button
           className={`save-button ${saved ? "saved" : ""}`}
@@ -352,8 +362,11 @@ function App() {
     let result = orderNewFeed(draftTokens, [...marketData.records]);
     if (feed === "watchlist")
       result = result.filter((token) => saved.includes(token.id));
+    if (feed === "trending") result = result.filter((token) => !token.isDraft);
     if (feed === "graduating")
-      result = [...result].sort((a, b) => b.progress - a.progress);
+      result = result
+        .filter((token) => !token.isDraft)
+        .sort((a, b) => b.progress - a.progress);
     const query = search.trim().toLowerCase();
     if (query)
       result = result.filter((token) =>
@@ -735,7 +748,7 @@ function App() {
             </div>
           </div>
           <p className="sr-only" role="status" aria-live="polite">
-            {tokens.length} {tokens.length === 1 ? "token" : "tokens"} in the{" "}
+            {tokens.length} {tokens.length === 1 ? "item" : "items"} in the{" "}
             {feed} feed
             {search.trim() ? ` matching ${search.trim()}` : ""}.
           </p>
@@ -905,26 +918,34 @@ function App() {
                       )}
                     </div>
                   )}
-                <div className="detail-chart">
-                  <MiniChart negative={selected.change < 0} />
-                </div>
-                <div className="detail-stats">
-                  <div>
-                    <span>Market cap</span>
-                    <strong>{selected.marketCap}</strong>
-                  </div>
-                  <div>
-                    <span>Holders</span>
-                    <strong>{selected.holders}</strong>
-                  </div>
-                  <div>
-                    <span>Curve progress</span>
-                    <strong>{selected.progress}%</strong>
-                  </div>
-                </div>
-                <div className="detail-progress">
-                  <span style={{ width: `${selected.progress}%` }} />
-                </div>
+                {selected.isDraft ? (
+                  <p className="draft-lifecycle">
+                    Browser draft · No token minted or curve started
+                  </p>
+                ) : (
+                  <>
+                    <div className="detail-chart">
+                      <MiniChart negative={selected.change < 0} />
+                    </div>
+                    <div className="detail-stats">
+                      <div>
+                        <span>Market cap</span>
+                        <strong>{selected.marketCap}</strong>
+                      </div>
+                      <div>
+                        <span>Holders</span>
+                        <strong>{selected.holders}</strong>
+                      </div>
+                      <div>
+                        <span>Curve progress</span>
+                        <strong>{selected.progress}%</strong>
+                      </div>
+                    </div>
+                    <div className="detail-progress">
+                      <span style={{ width: `${selected.progress}%` }} />
+                    </div>
+                  </>
+                )}
                 <div className="unavailable-note">
                   <LockKeyhole size={18} />
                   <span>

@@ -171,7 +171,7 @@ try {
     windowsVirtualKeyCode: 35,
   });
   await until(
-    "document.activeElement?.id === 'feed-tab-watchlist' && document.querySelector('.market-section [role=status]')?.textContent.includes('0 tokens in the watchlist feed')",
+    "document.activeElement?.id === 'feed-tab-watchlist' && document.querySelector('.market-section [role=status]')?.textContent.includes('0 items in the watchlist feed')",
   );
   await send("Input.dispatchKeyEvent", {
     type: "keyDown",
@@ -262,6 +262,18 @@ try {
     ),
     1,
   );
+  assert.match(
+    await evaluate(
+      "document.querySelector('[role=dialog] .draft-lifecycle')?.textContent",
+    ),
+    /no token minted or curve started/i,
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('[role=dialog] .detail-chart, [role=dialog] .detail-stats, [role=dialog] .detail-progress')",
+    ),
+    false,
+  );
   await send("Input.dispatchKeyEvent", {
     type: "keyDown",
     key: "Escape",
@@ -281,6 +293,42 @@ try {
     ),
     "View First Draft",
   );
+  assert.match(
+    await evaluate(
+      "document.querySelector('.token-card .draft-lifecycle')?.textContent",
+    ),
+    /no token minted or curve started/i,
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('.token-card .chart-wrap, .token-card .card-metrics, .token-card .card-progress')",
+    ),
+    true,
+    "sample tokens still retain their illustrative metrics",
+  );
+  assert.equal(
+    await evaluate(
+      "!!document.querySelector('.token-card:first-child .chart-wrap, .token-card:first-child .card-metrics, .token-card:first-child .card-progress')",
+    ),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-graduating').click()");
+  await until(
+    "document.querySelector('.market-section [role=status]')?.textContent.includes('8 items in the graduating feed')",
+  );
+  assert.equal(
+    await evaluate("!!document.querySelector('.token-card .draft-lifecycle')"),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-trending').click()");
+  await until(
+    "document.querySelector('.market-section [role=status]')?.textContent.includes('8 items in the trending feed')",
+  );
+  assert.equal(
+    await evaluate("!!document.querySelector('.token-card .draft-lifecycle')"),
+    false,
+  );
+  await evaluate("document.getElementById('feed-tab-new').click()");
   await evaluate(
     "document.querySelector('button[aria-label=\"Add First Draft to watchlist\"]').click()",
   );
@@ -289,6 +337,10 @@ try {
   );
   await send("Page.reload", { ignoreCache: true });
   await until("!!document.querySelector('.site-shell')");
+  await evaluate("document.getElementById('feed-tab-new').click()");
+  await until(
+    "document.querySelector('.token-card .card-open')?.getAttribute('aria-label') === 'View First Draft'",
+  );
   assert.equal(
     await evaluate(
       "document.querySelector('.token-card .card-open')?.getAttribute('aria-label')",
