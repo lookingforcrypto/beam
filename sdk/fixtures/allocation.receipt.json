@@ -1,0 +1,14 @@
+{
+  "kind": "Host-only execution of the reviewed allocation fixture producer linked to the locked beam-program crate",
+  "exitCode": 0,
+  "head": "5b0866c",
+  "sourcePath": "sdk/tools/generate-allocation-fixtures.rs",
+  "sourceSha256": "0f4adfcfa4c17533f8adfd7da64d1ccfc6faa932975e6f75b965ae81b1b10de4",
+  "stdoutPath": "sdk/fixtures/allocation.json",
+  "stdoutSha256": "98d8c01e13308772ad8abb5d46addec39d0c265560f3d6e51e2f6f3830b60c9d",
+  "stdoutBytes": 6312,
+  "noHandlersOrNetworkOrTransactions": true,
+  "cargo": "1.97.0",
+  "rustc": "1.97.0",
+  "command": "cp sdk/tools/generate-allocation-fixtures.rs programs/beam/examples/beam_allocation_fixture.rs && cargo run --locked --manifest-path programs/beam/Cargo.toml --example beam_allocation_fixture; rm -r programs/beam/examples"
+}

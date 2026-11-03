@@ -126,3 +126,23 @@ cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's
   Mayhem and cashback trades are not modelled.
 - **No execution.** There is no RPC, wallet, signing or transaction
   submission. A quote is not a guarantee of execution.
+
+## Selected-policy allocation (`beam-allocation.mjs`)
+
+`allocateBeamFee(notional)` returns the owner-selected 50-bps Beam component
+for one curve-trade notional:
+
+- **Total, founder, treasury, community.** These four mirror
+  `beam_economics::allocate` exactly: one ceiling fee at 50 bps; founder
+  capped at `floor(n · 3 / 10 000)`; treasury capped at
+  `floor(n · 5 / 10 000)`; the remainder to the community.
+- **Creator.** The creator reservation follows docs/ECONOMICS.md step 4:
+  `min(community, floor(n · 35 / 10 000))`, with the rest left for other
+  community uses. The contract does not implement this step yet.
+
+This is selected policy, not live routing. The retained handlers still collect
+through the inherited fee CPI. `fixtures/allocation.json` is the unedited
+stdout of `tools/generate-allocation-fixtures.rs`: 68 notionals passed through
+`beam_economics::allocate` in the locked crate, with a receipt. The tests also
+check lamport conservation and the ECONOMICS examples. `beam-quote.d.mts` and
+`beam-allocation.d.mts` declare the types the TypeScript web preview imports.
