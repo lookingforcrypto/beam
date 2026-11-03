@@ -337,7 +337,7 @@ export const deriveSharingConfig = (mint) => findProgramAddress(
 
 // Native-SOL curves only: the V2 handlers then require `quoteMint` = WSOL and
 // derive every quote ATA with SPL Token, while paying in lamports. The
-// returned object uses the Anchor field names that the draft
+// returned object uses the Anchor field names that the merged
 // `beam-v2-trades.mjs` builders take. As with the legacy resolvers,
 // `creator`, `baseTokenProgram` (the mint's owner), the fee recipient, the
 // buyback recipient and the inherited fee accounts are caller inputs. Pass a

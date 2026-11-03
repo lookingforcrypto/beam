@@ -107,8 +107,7 @@ return only the base metas. `legacyTradeRemainingAccounts` builds the pair,
 and `withRemainingAccounts` appends it to a built instruction without
 mutating it. Without both accounts, the handler fails with
 `BuybackFeeRecipientMissing`. `tests/legacy-trade-runtime` shows this by
-running the real handler in a local bank. That test is in a separate draft
-PR.
+running the real handler in a local bank (merged through PR #64).
 
 `beam-global.mjs` decodes the `Global` account: 8 discriminator bytes and
 1,080 bytes of fields, with trailing bytes ignored as Anchor ignores them. It
@@ -134,8 +133,9 @@ modelled; Beam rejects cashback creation.
 ### V2 trade accounts (native-SOL curves)
 
 `resolveBuyV2Accounts` and `resolveSellV2Accounts` return the 27 BuyV2 and 26
-SellV2 accounts. The keys are the Anchor field names that the draft
-`beam-v2-trades.mjs` builders take. On a native-SOL curve the handlers require
+SellV2 accounts. The keys are the Anchor field names that the merged
+`beam-v2-trades.mjs` builders (PR #27) take, and the tests pass the resolved
+accounts through those builders. On a native-SOL curve the handlers require
 `quoteMint` = WSOL and every quote ATA derived with SPL Token, while paying in
 lamports.
 
@@ -159,7 +159,7 @@ These stay explicit inputs, as in the legacy resolvers:
 `fixtures/v2-accounts.json` is the unedited stdout of
 `tools/generate-v2-account-fixtures.rs`. It contains Anchor's own
 `accounts::BuyV2` / `accounts::SellV2` `to_account_metas` for Token-2022 and
-SPL Token base mints. The resolvers, laid out in that field order, reproduce
-every pubkey and privilege flag. The same derivations run against the real
-handlers in `tests/legacy-trade-runtime/tests/v2_trade.rs`, which is in a
-separate draft PR.
+SPL Token base mints. Passed through the merged `buildBuyV2` / `buildSellV2`,
+the resolved accounts reproduce every pubkey and privilege flag. The same
+derivations run against the real handlers in
+`tests/legacy-trade-runtime/tests/v2_trade.rs` (merged through PR #64).

@@ -15,6 +15,7 @@ import {
   resolveBuyV2Accounts, resolveSellV2Accounts, deriveSharingConfig, WSOL_MINT, INHERITED_FEE_PROGRAM_ID,
 } from './beam-pdas.mjs';
 import { decodeGlobal } from './beam-global.mjs';
+import { buildBuyV2, buildSellV2 } from './beam-v2-trades.mjs';
 
 const fixtureBytes = readFileSync(new URL('./fixtures/pdas.json', import.meta.url));
 const fixture = JSON.parse(fixtureBytes);
@@ -189,27 +190,7 @@ test('legacy remaining accounts follow the handlers\' [bonding-curve-v2, buyback
   assert.throws(() => withRemainingAccounts(base, [{ pubkey: 'bad' }]), /remaining pubkey/);
 });
 
-// Anchor field order and privileges of `BuyV2` (programs/beam/src/buy_v2.rs);
-// `SellV2` is the same without `globalVolumeAccumulator`. The names match the
-// draft `beam-v2-trades.mjs` builder layout.
-const BUY_V2_ORDER = [
-  ['global', false, false], ['baseMint', false, false], ['quoteMint', false, false],
-  ['baseTokenProgram', false, false], ['quoteTokenProgram', false, false],
-  ['associatedTokenProgram', false, false], ['feeRecipient', false, true],
-  ['associatedQuoteFeeRecipient', false, true], ['buybackFeeRecipient', false, true],
-  ['associatedQuoteBuybackFeeRecipient', false, true], ['bondingCurve', false, true],
-  ['associatedBaseBondingCurve', false, true], ['associatedQuoteBondingCurve', false, true],
-  ['user', true, true], ['associatedBaseUser', false, true],
-  ['associatedQuoteUser', false, true], ['creatorVault', false, true],
-  ['associatedCreatorVault', false, true], ['sharingConfig', false, false],
-  ['globalVolumeAccumulator', false, false], ['userVolumeAccumulator', false, true],
-  ['associatedUserVolumeAccumulator', false, true], ['feeConfig', false, false],
-  ['feeProgram', false, false], ['systemProgram', false, false],
-  ['eventAuthority', false, false], ['program', false, false],
-];
-const SELL_V2_ORDER = BUY_V2_ORDER.filter(([name]) => name !== 'globalVolumeAccumulator');
-
-test('V2 resolvers reproduce Anchor BuyV2/SellV2 metas for both base token programs', () => {
+test('V2 resolvers feed the merged beam-v2-trades.mjs builders and reproduce Anchor metas', () => {
   const v2Bytes = readFileSync(new URL('./fixtures/v2-accounts.json', import.meta.url));
   const v2 = JSON.parse(v2Bytes);
   const v2Receipt = JSON.parse(readFileSync(new URL('./fixtures/v2-accounts.receipt.json', import.meta.url)));
@@ -226,10 +207,13 @@ test('V2 resolvers reproduce Anchor BuyV2/SellV2 metas for both base token progr
     };
     const buy = c.instruction === 'buyV2';
     const accounts = buy ? resolveBuyV2Accounts(input) : resolveSellV2Accounts(input);
-    const order = buy ? BUY_V2_ORDER : SELL_V2_ORDER;
-    assert.deepEqual(Object.keys(accounts).sort(), order.map(([n]) => n).sort(), `${c.instruction} field set`);
-    const metas = order.map(([name, isSigner, isWritable]) => ({ pubkey: accounts[name], isSigner, isWritable }));
-    assert.deepEqual(metas, c.metas, `${c.instruction} / ${c.label}`);
+    // The merged #27 builders require exactly their named accounts, so this
+    // also checks the resolver's field set.
+    const ix = buy
+      ? buildBuyV2(accounts, { amount: 1n, maxSolCost: 2n, partialFill: false })
+      : buildSellV2(accounts, { amount: 1n, minSolOutput: 0n });
+    assert.equal(ix.programId, PROGRAM_ID);
+    assert.deepEqual(ix.keys, c.metas, `${c.instruction} / ${c.label}`);
   }
   assert.equal(resolveBuyV2Accounts({ ...i, baseTokenProgram: TOKEN_2022_PROGRAM_ID }).quoteMint, WSOL_MINT);
 });
