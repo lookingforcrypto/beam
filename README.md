@@ -44,8 +44,8 @@ authority, mint, or execution budget is approved. Define revenue from amounts
 Beam actually collects and may spend; do not treat trading volume, creator
 entitlements, third-party Raydium fees, or reserved community rewards as
 available buyback funds. Creator payouts come from the 42-bps community share,
-but their rate is unset; reconcile that rate with the 42/5/3-bps allocation
-before implementing this goal. An ambition
+at a selected 35 bps of curve-trade notional. That leaves a nominal 7 bps for
+other community uses, whose split and custody still need review. An ambition
 to allocate more revenue than competitors, including Pump.fun, is unverified
 until comparable bases, periods, commitments and realized spending are checked.
 No buyback or burn is active, and neither guarantees $BEAM price appreciation.
@@ -132,7 +132,7 @@ completion percentages or production approval.
 | Launch tokens and trade on the curve | **Merged development code** | [PR #1](https://github.com/shawkkkkk/beam/pull/1) contains Anchor handlers and selected host tests. Complete instruction execution and SBF behavior remain unverified. |
 | Remove Mayhem and PumpSwap | **In progress** | Mayhem creation and legacy PumpSwap entry paths fail closed; [PR #12](https://github.com/shawkkkkk/beam/pull/12) blocked a nested graduated quote. Router, creator/sharing, CTO and donation dependencies still need compatible replacements. |
 | Graduate to Raydium AMM v4 | **Blocked; partial test evidence** | [Merged PR #9](https://github.com/shawkkkkk/beam/pull/9) adds source-only ABI guards; [merged #38](https://github.com/shawkkkkk/beam/pull/38) invokes the pinned Raydium source processor through a local synthetic probe. Draft [#68](https://github.com/shawkkkkk/beam/pull/68) adds a gated Beam migration CPI; stacked draft [#72](https://github.com/shawkkkkk/beam/pull/72) burns Beam-received LP. Older [#22 → #29 → #30](docs/TASKS.md#draft-review-queue-prs-2234) and [#25 → #33 → #34](docs/TASKS.md#draft-review-queue-prs-2234) drafts cover separate guards and mock settlement. No AMM v4 migration is merged or active, and Token-2022 graduation remains unresolved. |
-| Enforce Beam fees and creator payouts | **Blocked; math and disabled policy in draft** | [PR #5](https://github.com/shawkkkkk/beam/pull/5) merged provisional 42/5/3 arithmetic. Draft [#23/#24/#26](docs/TASKS.md#draft-review-queue-prs-2234) test stricter caps and disabled state. Live collection, selected creator wallet payout and post-graduation rights are unresolved. |
+| Enforce Beam fees and creator payouts | **Blocked; math and disabled policy in draft** | [PR #5](https://github.com/shawkkkkk/beam/pull/5) merged provisional 42/5/3 arithmetic. The selected curve creator rate is 35 bps from the community share; draft [#23/#24/#26](docs/TASKS.md#draft-review-queue-prs-2234) predate that decision. Live collection and selected-wallet payout remain unresolved. The historical AMM v4 model has no new Beam fee after graduation. |
 | Whole Beam binary matches Pump | **Different by design** | Beam changes the program identity, venue, Mayhem and fee code. Source matches in retained files do not establish a compiled or deployed byte match. |
 
 ### Website, frontend, and SDK
@@ -162,7 +162,7 @@ and the [dated PR dependency queue](docs/TASKS.md) for more detail.
 | --- | --- |
 | Verified AMM v4 migration and liquidity | Merged PR #38 invokes the pinned Raydium source processor through a local probe. Draft #68 adds a gated Beam adapter and draft #72 burns Beam-received LP under the owner's selected policy; neither is live. Review the combined account, burn, rollback and deployed-binary evidence; measure depth, slippage and post-graduation behavior before enabling migration. Burned LP yields no continuing Beam LP-fee claim. |
 | Token compatibility | Raydium AMM v4 accepts classic SPL Token mints; Beam's curve also retains restricted Token-2022 support. A safe graduation plan for those launches is unresolved. |
-| Enforced and disclosed fees | Beam's proposed allocation is not wired into trades. Creator payouts must come from the 42-bps community share; choose the still-unset creator rate, vault authority, remainder distribution and all-in quote behavior before activation. |
+| Enforced and disclosed fees | Beam's proposed allocation is not wired into trades. The selected 35-bps creator take comes from the 42-bps community share; vault authority, recipient routing, rounding, remainder distribution and all-in quote behavior need implementation and tests before activation. |
 | Complete client and services | Regenerate the Beam IDL; add authenticated indexer, wallet/client and authorized creator, charity, callout and media integrations. Sample data and mocks cannot be presented as live observations. |
 | Release evidence and authorization | Complete SBF/local-validator tests with real permitted program dependencies, independent security review and maintainer-controlled deployment decisions. This repository deploys nothing. |
 
@@ -187,14 +187,16 @@ performance.
 | Allocation | Proposed rate | Share of 0.50% |
 | --- | ---: | ---: |
 | Community share, including creator payouts | 0.42% | 84% |
+| ↳ Creator take within community share | 0.35% | 70%, included above |
+| ↳ Other community uses, nominal remainder | 0.07% | 14%, included above |
 | Treasury | 0.05% | 10% |
 | Founder | 0.03% | 6% |
 | **Total** | **0.50%** | **100%** |
 
 Treasury plus founder are 8 basis points under platform control. Creator
 payouts must come from the 0.42% community share, and creator-selected wallet
-support remains a requirement. The creator rate is intentionally unset, and
-inherited collection, migration charges and venue fees are not reconciled;
+support remains a requirement. The selected creator rate is 0.35% of curve
+notional; inherited collection, migration charges and venue fees are not reconciled;
 0.50% is **not** an executable all-in quote. A 50/50 split of the community
 remainder after creator payouts is only a test assumption; beneficiaries, custody
 and spending rules are not approved. Draft [#23](https://github.com/shawkkkkk/beam/pull/23)
@@ -243,8 +245,8 @@ migration entrypoint.
 ## Open priorities and contribution
 
 The immediate engineering gates are authenticated AMM v4 migration with the
-selected LP burn, a separate post-graduation revenue source if needed,
-creator rate and fee routing, Token-2022 graduation,
+selected LP burn, the 35-bps creator route within the community share, fee
+custody and all-in quotes, Token-2022 graduation,
 PumpSwap-dependent feature replacements, a final Beam client and authorized
 off-chain services. They remain **blocked or in draft** despite resumed
 development; this list does not authorize activation or release. See [task ownership](docs/TASKS.md)

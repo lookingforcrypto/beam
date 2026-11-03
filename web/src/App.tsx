@@ -568,8 +568,8 @@ function App() {
               <span className="proof-divider" />
               <span>
                 Planned Beam allocation: 0.42% community / 0.05% treasury /
-                0.03% founder. Creator payouts use the community share; rate
-                unset.
+                0.03% founder. Planned creator take: 0.35% of curve notional
+                from the community share; inactive.
               </span>
             </div>
           </div>
@@ -1161,9 +1161,11 @@ function App() {
                       <p>
                         The proposed Beam component is 0.50% nominal: 0.42%
                         community (including creator payouts), 0.05% treasury,
-                        and 0.03% founder. The creator payout rate is unset.
-                        This is not an all-in trade quote; collection and
-                        distribution are inactive.
+                        and 0.03% founder. The selected creator take is 0.35% of
+                        curve notional from the community share, leaving a
+                        nominal 0.07% for other community uses. This is not an
+                        all-in trade quote; collection and distribution are
+                        inactive.
                       </p>
                     </div>
                     <ChevronRight size={18} />
@@ -1178,7 +1180,10 @@ function App() {
                         integrated here and this preview cannot create a pool.
                         Beam plans to burn the LP it receives at graduation;
                         that implementation remains in draft and gives Beam no
-                        ongoing LP-fee claim.
+                        ongoing LP-fee claim. The selected historical model adds
+                        no new Beam fee after graduation; an unclaimed curve
+                        creator balance should remain claimable once the payout
+                        path exists.
                       </p>
                     </div>
                     <ChevronRight size={18} />

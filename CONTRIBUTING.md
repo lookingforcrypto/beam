@@ -186,11 +186,12 @@ public issues or pull requests.
    discovers the new tests. A new commit, retargeted base, dependency merge,
    conflict resolution, or changed workflow invalidates prior exact-head
    evidence; rerun affected checks and refresh review on the final tree.
-4. Keep unresolved security, fee custody, creator **rate** and recipient
-   routing, post-graduation revenue, Token-2022 graduation, authenticated
-   indexer and live-service work in draft. Creator payouts come from the
+4. Keep unresolved security, fee custody, creator recipient/rounding
+   routing, Token-2022 graduation, authenticated indexer and live-service
+   work in draft. The selected 35-bps curve creator take comes from the
    42-bps community share; Beam-received AMM v4 LP is to be burned, with no
-   continuing LP-fee claim. A disabled helper may be merged as development
+   continuing LP-fee claim or new Beam fee on later AMM v4 trades. A disabled
+   helper may be merged as development
    source only when its scope and limitations are explicit and the current maintainer decision
    allows it. Host or mock tests never authorize activation or deployment.
 5. Merge only when the PR is ready, its exact reviewed head and base still

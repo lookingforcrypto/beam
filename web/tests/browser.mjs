@@ -153,7 +153,7 @@ try {
   assert.doesNotMatch(initialCopy, /CPMM|durable liquidity|lasting liquidity/i);
   assert.match(
     initialCopy,
-    /Creator payouts use the community share; rate unset/i,
+    /Planned creator take: 0\.35% of curve notional from the community share; inactive/i,
   );
   assert.doesNotMatch(
     initialCopy,
@@ -166,10 +166,13 @@ try {
   const howCopy = await evaluate(
     "document.querySelector('[role=dialog]').innerText",
   );
-  assert.match(howCopy, /creator payout rate is unset/i);
+  assert.match(howCopy, /creator take is 0\.35% of curve notional/i);
+  assert.match(howCopy, /nominal 0\.07% for other community uses/i);
   assert.match(howCopy, /not an all-in trade quote/i);
   assert.match(howCopy, /burn the LP it receives at graduation/i);
   assert.match(howCopy, /no ongoing LP-fee claim/i);
+  assert.match(howCopy, /no new Beam fee after graduation/i);
+  assert.match(howCopy, /curve creator balance should remain claimable/i);
   await send("Input.dispatchKeyEvent", {
     type: "keyDown",
     key: "Escape",

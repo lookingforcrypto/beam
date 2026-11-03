@@ -6,9 +6,12 @@ contribution scopes, not paid bounties. Confirm maintainer direction and PR
 ownership before taking a lane.
 
 **Owner decision update, 3 November 2026:** Creator payouts come from the
-42-bps community share; the exact creator rate is intentionally unset. The
+42-bps community share at 35 bps of curve-trade notional, leaving a nominal
+7 bps for other community uses. This is selected policy, not live routing. The
 selected AMM v4 policy burns all Beam-received LP, so Beam has no continuing
-LP-fee claim. The product priority is the simple pre-PumpSwap launch → curve →
+LP-fee claim or new post-graduation Beam trading fee; accrued curve creator
+balances should remain claimable after graduation once custody is implemented.
+The product priority is the simple pre-PumpSwap launch → curve →
 Raydium experience. These decisions supersede older undecided language in the
 dated PR snapshots below; they do not activate draft code. Draft [#68](https://github.com/shawkkkkk/beam/pull/68)
 owns the gated AMM v4 adapter and draft [#72](https://github.com/shawkkkkk/beam/pull/72)
@@ -22,7 +25,7 @@ current head, base, diff and exact-head checks before claiming a lane.
 
 | Open work | Ownership boundary | Review dependency or current limit |
 | --- | --- | --- |
-| [#36](https://github.com/shawkkkkk/beam/pull/36) and stacked [#49](https://github.com/shawkkkkk/beam/pull/49) | Retired PumpSwap interfaces, AMM v4 replacement routing, creator/CTO/donation rights in `programs/beam/`. | At this snapshot #36 conflicted with `main` and #49 was based on #36. The owner has since chosen creator funding from the 42-bps share, with rate unset. Review current PR state, combined source, IDL, runtime and account authority before integration. |
+| [#36](https://github.com/shawkkkkk/beam/pull/36) and stacked [#49](https://github.com/shawkkkkk/beam/pull/49) | Retired PumpSwap interfaces, AMM v4 replacement routing, creator/CTO/donation rights in `programs/beam/`. | At this snapshot #36 conflicted with `main` and #49 was based on #36. The owner has since chosen a 35-bps creator take from the 42-bps share. Review current PR state, combined source, IDL, runtime and account authority before integration. |
 | [#39](https://github.com/shawkkkkk/beam/pull/39) | Generated IDL and SDK fixtures. | Reconcile the IDL with final integrated source and error messages; historical PumpSwap identifiers in a reference catalog are not operational routing. |
 | [#16](https://github.com/shawkkkkk/beam/pull/16) → [#56](https://github.com/shawkkkkk/beam/pull/56) | Fixture indexer and a stacked rollback/schema-boundary test under `backend/indexer/`. | The fixture query is not merged web adapter #17's authenticated `IndexedPage`; signatures, metadata and mint-to-curve association remain unavailable. #56 adds no live ingestion. |
 | [#45](https://github.com/shawkkkkk/beam/pull/45), [#46](https://github.com/shawkkkkk/beam/pull/46), [#47](https://github.com/shawkkkkk/beam/pull/47) | PDA/ATA SDK derivation, local legacy quote helpers and native-SOL local-bank trades. | Coordinate fixtures and exact contract accounts. Hosted workflows on their latest heads were `action_required` at this checkpoint, not passing tests. |
@@ -41,7 +44,7 @@ current head, base, diff and exact-head checks before claiming a lane.
 | [Website preview, PR #6](https://github.com/shawkkkkk/beam/pull/6), merged at `ecd1caf` | Beam-branded sample-data web preview; [PR #8](https://github.com/shawkkkkk/beam/pull/8) merged state, copy and local interaction fixes into its branch. | No real wallet, trading, donations, streams, indexer or backend. |
 | [Native-SOL ABI fixtures, PR #7](https://github.com/shawkkkkk/beam/pull/7), merged at `b8120a8` | Local-only legacy create/buy/sell encoder and current account/event fixtures. | No executable transaction builder or creator-fee account resolution. |
 | [AMM v4 ABI, PR #9](https://github.com/shawkkkkk/beam/pull/9), merged at `c8dc348` | Source-only `Initialize2` data/account/PDA guards for the official pinned AMM v4 source. | No migration CPI, LP disposition or Token-2022 graduation. |
-| [Creator-funding clarity, PR #11](https://github.com/shawkkkkk/beam/pull/11), merged at `9a6ede9` | At that time, recorded an open funding choice. The owner has since selected the 42-bps community share, with creator rate unset. | No live fee collection or all-in fee quote. |
+| [Creator-funding clarity, PR #11](https://github.com/shawkkkkk/beam/pull/11), merged at `9a6ede9` | At that time, recorded an open funding choice. The owner has since selected 35 bps from the 42-bps community share. | No live fee collection or all-in fee quote. |
 | [Nested quote guard, PR #12](https://github.com/shawkkkkk/beam/pull/12), merged at `4e32d30` | Graduated `create_v2` quote fails closed before reading PumpSwap pool accounts. | No AMM v4 quote, venue migration or fee routing; other PumpSwap assumptions still need an audit. |
 | [AMM v4 local validator, PR #38](https://github.com/shawkkkkk/beam/pull/38), merged at `ae3b3b61582750de5f62a6b0e6ea768b0a19c3a6` | Separate `tests/amm-v4-validator/` crate invokes pinned Raydium source `Initialize2` through a synthetic local probe; selected balances, fee debit, replay, rollback and Token-2022 rejection are tested. | Does not invoke Beam migration, validate deployed Raydium bytecode, decide LP/creator rights or enable graduation. See [validation](VALIDATION.md#amm-v4-local-source-processor-cpi-pr-38). |
 | [Legacy creator SDK, PR #13](https://github.com/shawkkkkk/beam/pull/13), open draft | Local collection builder, creator event decoder and rent/balance preview under `sdk/beam-creator*`; review is pending. | No authenticated state, payout-wallet change, RPC, signing or live claim. Avoid duplicate creator SDK work. |
@@ -109,7 +112,7 @@ not an edit to the retained Pump source archive.
 | Draft and exact head | Target / changed files | Evidence and remaining boundary |
 | --- | --- | --- |
 | [#22 AMM v4 config fee guard](https://github.com/shawkkkkk/beam/pull/22) `884f375343dc1731e21856a4f1bb0e4322c86175` | `main`; `programs/beam/src/beam_amm_v4.rs`. | Local locked default/experimental suites: 17 unit + 4 compatibility each; no-default, provenance and diff checks reported passed. Source guard only. Stored Beam policy must supply the cap and an eventual caller must recheck before CPI. |
-| [#23 strict ordinary fee caps](https://github.com/shawkkkkk/beam/pull/23) `c2735f13809e9fc63c9aaa5f31b1760d5fa8a447` | `main`; `programs/beam/src/beam_economics.rs`, `docs/ECONOMICS.md`. | Local default/experimental: 15 unit + 4 compatibility each, no-default/provenance, 200,004-case arithmetic sweep reported passed. Provisional helper only; creator rate and live collection unresolved. |
+| [#23 strict ordinary fee caps](https://github.com/shawkkkkk/beam/pull/23) `c2735f13809e9fc63c9aaa5f31b1760d5fa8a447` | `main`; `programs/beam/src/beam_economics.rs`, `docs/ECONOMICS.md`. | Local default/experimental: 15 unit + 4 compatibility each, no-default/provenance, 200,004-case arithmetic sweep reported passed. Provisional helper only; the creator rate was later set to 35 bps, while live collection remains unresolved. |
 | [#24 disabled fee policy](https://github.com/shawkkkkk/beam/pull/24) `d578111b75b705948cbcc4a34bef2183f2440603` | `main`; `programs/beam/src/beam_fee_policy_v1.rs`, `programs/beam/src/lib.rs`, `upstream/manifest.json`. | Local default/experimental: 19 unit + 4 compatibility each, no-default/provenance reported passed. Initializer stores Disabled/Undecided and zero credited fees; no quote, collect, update, withdrawal or trade wiring. #23 is a prerequisite before fee activation. |
 | [#25 synthetic retired-gate harness](https://github.com/shawkkkkk/beam/pull/25) `4706d59ddb479d3b32c8c369fc342712ff89b023` | `main`; `.github/workflows/runtime-harness.yml`, `tests/runtime-harness/{Cargo.toml,Cargo.lock,src/lib.rs,tests/migration_runtime.rs}`. | Local ProgramTest 3/3 in default and experimental modes reported passed. Tests retired CPMM gates with synthetic programs, not real Raydium CPI or AMM v4 migration. |
 | [#26 fee policy local-bank test](https://github.com/shawkkkkk/beam/pull/26) `43ca5500d8046c6b7fc4125b300e16b28699a8ce` | **Stacked on #24**, also incorporates #25; `.github/workflows/runtime-harness.yml`, `tests/runtime-harness/{Cargo.toml,Cargo.lock,src/lib.rs,tests/fee_policy_runtime.rs,tests/migration_runtime.rs}` relative to #24. | New synthetic initializer test reported passed in default/experimental modes: authority, atomic failure, duplicate init, rent and uncredited unsolicited SOL. Review integrated #24+#25 diff. No live fee routing; #23 remains necessary before activation. |
@@ -132,7 +135,7 @@ Review order follows actual branch targets, not PR number alone:
 2. Fee chain: #23 and #24 are independent drafts on `main`; review both,
    then #25 and stacked #26 against their resulting combined tree. Policy
    remains disabled; the owner has since chosen creator funding from the
-   community share, while leaving its exact rate unset.
+   community share at 35 bps of curve notional.
 3. Client/UI chain: merged #20 provides #27 hosted test discovery. For web,
    merged #17 is the base for #28 → #31 → #32; retarget and review #28's
    combined tree before merge. Check #6's merged preview baseline and
@@ -154,7 +157,7 @@ strength of this table.
 | PR #16 owner and merged #17 baseline: `backend/indexer/` / `web/src/indexerAdapter.ts` | Agree on a versioned response schema, slot/finality and unavailable states before connecting them. | Replay/rollback and bounded backend queries; web stale/malformed data tests. |
 | Merged #18 / #20 SDK baselines | New builders/decoders should reuse these local interfaces without implying live accounts or authenticated events. | Exact Anchor fixture bytes, rejection paths and Node test receipts. |
 | Claimed: AMM v4 execution adapter in draft #68 and LP burn in draft #72 | Review those exact heads and combined tree before adjacent migration work. The retired CPMM path stays disabled. | Host ABI tests plus SBF/local-validator CPI, burn, rollback, account substitution, donation and replay cases before activation. |
-| Proposed: Beam fee custody and routing in dedicated contract modules | Creator payout comes from the 42-bps community share, but its rate and vault authority remain unset. Build on PR #12's merged `create_v2` guard without reintroducing PumpSwap reads; recheck active fee PRs before claiming. | Conserved total fee, creator/community allocation, rounding and unauthorized-recipient tests; local runtime evidence before live use. |
+| Proposed: Beam fee custody and routing in dedicated contract modules | Creator payout is selected at 35 bps of curve notional from the 42-bps community share; vault authority and actual route remain unresolved. Build on PR #12's merged `create_v2` guard without reintroducing PumpSwap reads; recheck active fee PRs before claiming. | Conserved total fee, creator/community allocation, rounding and unauthorized-recipient tests; local runtime evidence before live use. |
 | Unassigned: wallet integration and remaining `web/` flows | Build on merged sample preview, finalized Beam IDL/SDK and a verified API. PR #17 already owns the read-only adapter; PR #13 owns creator SDK. | Local mock flows, stale-data/error states, accessibility and transaction-construction tests; no preview fixture presented as chain data. |
 
 Each future owner should record its exact base commit and touched paths in its
@@ -174,16 +177,19 @@ precise specification and isolated adversarial tests.
    host and validator tests. Enforce the user's 42/5/3-bps
    community/treasury/founder split while
    preserving creator payouts and creator-selected payout wallets. Fund
-   creators from the 42-bps community share; its exact rate is unset. Do not
-   add a second creator charge or present 50 bps as an executable all-in quote.
+   creators at 35 bps of curve-trade notional from the 42-bps community share.
+   Do not add a second creator charge or present 50 bps as an executable
+   all-in quote.
    Treat `beam_economics.rs` as proposed arithmetic, not a live 50-bps fee.
    Disclose each applicable creator, Raydium pool, and inherited migration fee
    in quotes and receipts.
 2. **Raydium AMM v4 graduation, principal and fee rights.** Review and
    complete the gated #68 adapter plus #72 LP burn. Verify that the burn
    removes Beam's withdrawal and ongoing LP-fee claim, with rollback and
-   replay protection. Any post-graduation creator/community fee source needs
-   a separate reviewed mechanism. Keep migration disabled until these paths
+   replay protection. The selected historical model charges no new Beam fee
+   on AMM v4 trades; only unclaimed curve balances remain payable after
+   graduation. A different post-graduation source would require a new owner
+   decision and review. Keep migration disabled until these paths
    and tests resolve. Assess initial and continuing pool depth, LP ownership
    and withdrawal control, slippage
    and price impact at comparable trade sizes, and post-graduation liquidity.
@@ -209,8 +215,8 @@ precise specification and isolated adversarial tests.
    specified. The flagship $BEAM token is intended to launch on Beam; a very
    high but unquantified share of eligible protocol revenue is intended for
    buybacks and burns. Define the revenue base and reconcile it with 42/5/3,
-   the unset creator rate and holder rewards before choosing any rate. Do not count
-   volume or third-party fees as spendable revenue, double-count allocated
+   the 35-bps creator rate and holder rewards before choosing any buyback rate.
+   Do not count volume or third-party fees as spendable revenue, double-count allocated
    funds, add automatic market orders or claim perpetual revenue or returns.
    Separately account for support of existing launched-token communities,
    creator payouts, operations, flagship spending and any disclosed promotion;

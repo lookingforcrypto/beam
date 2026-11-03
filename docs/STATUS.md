@@ -66,10 +66,14 @@ carried into merged [PR #6](https://github.com/shawkkkkk/beam/pull/6).
 
 Creator payouts and creator-selected wallet behavior remain requirements.
 The owner chose to fund creator payouts from the 42-bps community share; the
-creator rate remains unset. The ordinary proposed allocation is 42/5/3 basis
+selected curve creator rate is 35 bps of notional, leaving a nominal 7 bps
+for other community uses. The ordinary proposed allocation is 42/5/3 basis
 points for community/treasury/founder: 50 nominal basis points total, including
 8 basis points under platform control. This is not an active or all-in trade
-fee. The optional disabled, three-second buy-side quote
+fee. Under the selected historical AMM v4 model, graduation burns Beam's LP,
+so no new Beam creator or community fee accrues from later pool trades.
+Unclaimed curve creator balances should remain claimable once the payout
+path is implemented. The optional disabled, three-second buy-side quote
 prototype models an initial 99% fee of gross buyer debit. A 99% fee on net
 base would be about 49.75% of gross (0.99 / 1.99), so it is not the same rule.
 Its launch surcharge is separate from ordinary allocation, with no recipient

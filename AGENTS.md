@@ -26,18 +26,25 @@ identical to Pump.fun. Check current code and PRs before describing availability
 
 - The planned ordinary Beam allocation is 42/5/3 nominal basis points for
   community/treasury/founder. Creator payouts come **out of the 42-bps
-  community share**. The owner deliberately left the creator payout rate
-  **unset**; do not select 12 bps or any other rate, add a separate creator
-  charge, hard-code an all-in quote, or wire live distribution until the rate,
-  recipients, rounding, and custody are reviewed and tested.
+  community share**. The selected creator rate is **35 bps of curve-trade
+  notional**, leaving a nominal 7 bps for other community uses. Use the same
+  quote-amount input as `beam_economics::allocate`; calculate the creator
+  amount as `floor(quote_amount * 35 / 10,000)`, bounded by the actually
+  allocated community amount. This rate is product policy, not an implemented
+  fee route or an all-in quote. Do not add a separate creator charge or wire
+  live distribution until recipient, custody, rounding, dust, and conservation
+  behavior are implemented and tested on the actual trade path.
 - At AMM v4 graduation, burn all LP issued to Beam in the same transaction,
   following the selected historical Raydium pattern. Draft [PR #68](https://github.com/shawkkkkk/beam/pull/68)
   implements a gated adapter and draft [PR #72](https://github.com/shawkkkkk/beam/pull/72)
   adds the burn; neither is merged or activated. Burning LP relinquishes
-  Beam's claim to ongoing AMM v4 LP fees. Do not promise post-graduation LP
-  revenue, creator fees, or recurring buybacks from that position.
-- The creator rate, community-remainder distribution, post-graduation revenue
-  source, Token-2022 graduation, non-SOL graduation, fee vault authorities,
+  Beam's claim to ongoing AMM v4 LP fees. The selected historical model adds
+  **no Beam fee on post-graduation AMM v4 trades**. An unclaimed curve creator
+  balance should remain claimable after graduation, but graduation creates no
+  new Beam creator, community, or buyback revenue. Do not promise recurring
+  payments from the burned position.
+- Community-remainder distribution, Token-2022 graduation, non-SOL graduation,
+  fee vault authorities,
   flagship mint/buyback policy, charity design, general pairing support, and
   repository-root license remain unset or unimplemented as described in the
   current code and [economics guide](docs/ECONOMICS.md). Do not fill gaps from
@@ -100,7 +107,8 @@ identical to Pump.fun. Check current code and PRs before describing availability
   The user's Beam fee split is 42/5/3 nominal basis points for community,
   treasury and founder. Preserve the creator payout and creator-selected
   wallet system. Creator payouts must come from the 42-bps community share;
-  the exact creator rate remains unset. Disclose each applicable curve,
+  the selected curve creator rate is 35 bps of notional, pending implementation
+  and tests. Disclose each applicable curve,
   creator, migration, and Raydium pool fee; never promise returns.
 - On-chain reconstruction does not provide Pump's website, streaming, callout,
   or charity service backends. Treat those as independent feature work with
