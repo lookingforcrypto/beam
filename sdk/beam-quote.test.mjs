@@ -133,6 +133,8 @@ const exactInReceipt = JSON.parse(readFileSync(new URL('./fixtures/quote-exact-i
 test('exact-quote-in fixture bytes match the recorded runtime receipt', () => {
   assert.equal(createHash('sha256').update(exactInBytes).digest('hex'), exactInReceipt.stdoutSha256);
   assert.equal(exactInBytes.length, exactInReceipt.stdoutBytes);
+  const producer = readFileSync(new URL('../tests/legacy-trade-runtime/tests/exact_in_fixture.rs', import.meta.url));
+  assert.equal(createHash('sha256').update(producer).digest('hex'), exactInReceipt.producerSha256, 'in-tree producer matches the receipt');
 });
 
 test('buy_exact_quote_in_v2 preview matches every executed handler observation', () => {

@@ -4,12 +4,16 @@
   "programSourceCommit": "c707f3022f947572b20f730ccae11a8ccb8da52a",
   "producerCommit": "7d4c90505918ff1e70de8bb9046b0d1f1336c6f4",
   "producerPath": "tests/legacy-trade-runtime/tests/exact_in_fixture.rs",
-  "producerLocation": "draft PR #47 branch (lookingforcrypto:beam-legacy-trade-runtime)",
+  "producerLocation": "tests/legacy-trade-runtime/tests/exact_in_fixture.rs, merged to shawkkkkk/beam main through PR #64",
   "producerSha256": "5f11f266ee6f9d07462899af7c3a54ff0af7e5cf2d7a9b59c7d84912ea7f5229",
   "stdoutPath": "sdk/fixtures/quote-exact-in.json",
   "stdoutSha256": "73fdebc92a250b65e81ffed1284276b85d7443ed8f45597e52fafe7f0895392a",
   "stdoutBytes": 6614,
   "reproducedIdentically": true,
   "noNetworkOrWalletOrLiveFunds": true,
-  "command": "cd tests/legacy-trade-runtime && cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's/^@@//p'"
+  "command": "cd tests/legacy-trade-runtime && cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's/^@@//p'",
+  "reproducedOnMain": {
+    "mainCommit": "0a3ba8d",
+    "identicalBytes": true
+  }
 }

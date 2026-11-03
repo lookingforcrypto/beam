@@ -55,7 +55,8 @@ The preview functions apply checks in the order the handlers use:
 
 `previewLegacyBuy` / `previewLegacySell` also describe the native-SOL
 `buy_v2` / `sell_v2` handlers. They use the same check order, quote and fee
-arithmetic. Draft PR #47 executes both families and confirms the deltas.
+arithmetic. `tests/legacy-trade-runtime` (merged through PR #64) executes both
+families and confirms the deltas.
 
 ## Fees are an explicit input
 
@@ -102,9 +103,16 @@ a partial fill that completes the curve, and a buy after completion. Each case
 records the observed tokens, the curve's quote delta, the fee and buyback
 recipients' combined delta and the creator-vault delta, or the program error.
 `previewBuyExactQuoteInV2` matches every one. The producer is the ignored test
-`tests/legacy-trade-runtime/tests/exact_in_fixture.rs` on draft PR #47's
-branch. `quote-exact-in.receipt.json` pins that commit, the producer's SHA-256
-and the output hash. Two runs produced identical bytes.
+`tests/legacy-trade-runtime/tests/exact_in_fixture.rs`, now on `main` through
+PR #64. `quote-exact-in.receipt.json` pins the producer commit, its SHA-256 and
+the output hash. The test suite rechecks the in-tree producer against that
+hash. Two runs at the producer commit, and a third on `main` at `0a3ba8d`,
+produced identical bytes:
+
+```sh
+cd tests/legacy-trade-runtime
+cargo test --locked --test exact_in_fixture -- --ignored --nocapture | sed -n 's/^@@//p'
+```
 
 ## Not covered
 
