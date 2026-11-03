@@ -109,6 +109,9 @@ differ.
    - **Small fees wait in the vault.** A fee too small to make a new creator
      account rent-exempt is not paid out and is not lost: it stays in the
      vault and is paid with the next larger accrual.
+   - Each third-party claim uses a fresh blockhash, so repeated identical
+     claims execute independently instead of reusing a cached transaction
+     result. This also makes the empty-vault no-op exercise the handler again.
    - A creator account owned by the inherited fee program (a vault migrated
      to a sharing config) is refused with
      `UnableToDistributeCreatorVaultMigratedToSharingConfig`, and the vault
