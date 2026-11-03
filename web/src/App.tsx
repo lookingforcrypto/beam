@@ -31,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { sampleTokens, type Token } from "./data";
+import { TradePanel } from "./TradePanel";
 import { dataLabel, sampleState } from "./indexerAdapter";
 import {
   getBrowserStorage,
@@ -950,6 +951,7 @@ function App() {
                     <div className="detail-progress">
                       <span style={{ width: `${selected.progress}%` }} />
                     </div>
+                    <TradePanel token={selected} />
                   </>
                 )}
                 <div className="unavailable-note">
@@ -961,9 +963,14 @@ function App() {
                     Trading and migration are unavailable in this preview.
                   </span>
                 </div>
-                <button className="btn btn-primary modal-main-button" disabled>
-                  Trading not live yet
-                </button>
+                {selected.isDraft && (
+                  <button
+                    className="btn btn-primary modal-main-button"
+                    disabled
+                  >
+                    Trading not live yet
+                  </button>
+                )}
               </>
             ) : null}
             {modal === "create" && !selected ? (

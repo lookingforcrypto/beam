@@ -25,3 +25,19 @@ run `npm run test:browser --prefix web`. The test starts a loopback Vite preview
 and uses synthetic browser state; it does not submit a transaction.
 
 The website and backend contribution lanes are in [the task ledger](../docs/TASKS.md).
+
+## Trade preview (sample curve)
+
+A non-draft token's detail view shows a pre-PumpSwap style trade ticket. It
+has Buy/Sell tabs, quick amounts and max slippage, and a bonding-curve
+summary: tokens still for sale, SOL in the curve, the cost to finish, and the
+selected Raydium AMM v4 graduation with LP burn.
+
+- **Numbers.** `src/tradePreview.ts` computes every number locally. Curve math
+  comes from `../sdk/beam-quote.mjs` and the owner-selected 0.50% Beam
+  allocation from `../sdk/beam-allocation.mjs`.
+- **Sample data.** The curve is a sample state derived from the card's
+  progress, using the synthetic reserves of `tests/legacy-trade-runtime`.
+  Beam's launch reserves are not configured.
+- **No live actions.** The trade button stays disabled. There is no wallet,
+  RPC, signing or submission.
