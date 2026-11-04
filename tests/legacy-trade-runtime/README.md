@@ -117,6 +117,31 @@ differ.
      `UnableToDistributeCreatorVaultMigratedToSharingConfig`, and the vault
      is left untouched.
 
+9. **Creator wallet authority after launch (`tests/legacy_trade.rs`).** These
+   tests cover which paths can change a `create_v2` token's creator wallet on
+   `main`. The disabled `admin_cto` path is not exercised.
+   - **`set_creator` and `set_metaplex_creator`** take an SPL Token `Mint` and
+     a Metaplex metadata account. Anchor loads every account before it checks
+     `has_one`. A Token-2022 `create_v2` mint is therefore rejected with
+     `AccountOwnedByWrongProgram` for every caller, including a configured
+     `Global.set_creator_authority`, and the creator stays unchanged.
+   - **`migrate_bonding_curve_creator`** needs no signature, but it moves the
+     creator only to the mint's inherited-fee-program sharing config, and only
+     when that config's `admin` is the current creator.
+     - With no config, it fails with `AccountNotInitialized`.
+     - A config administered by someone else fails with
+       `BondingCurveAndSharingConfigCreatorMismatch`.
+     - After a valid move, fees accrued before it stay claimable by the old
+       wallet.
+     - Later trades must use the sharing config's vault. The old vault fails
+       with `ConstraintSeeds`, and `collect_creator_fee` refuses the
+       sharing-config vault.
+     - The sharing config is synthetic: Beam has not rehosted the fee program.
+   - **After completion.** Completing the curve does not lock the creator
+     vault, and the accrued balance still pays out to the creator wallet. AMM
+     v4 migration is not active on `main`, so this covers completion, not
+     post-migration custody.
+
 ## Remaining accounts
 
 Legacy `buy` and `sell` read `remaining_accounts[0]` as the
@@ -131,7 +156,8 @@ return only the base metas, so a client must append both accounts.
   0.50% / 42-5-3 policy.
 - Whitelist-PDA trades, cashback, holder rewards, Mayhem, non-SOL quote
   mints, Token-2022 transfer fees, V3 handlers, sharing configs and their
-  `distribute_creator_fees` paths, `collect_creator_fee_v2`, `set_creator`,
-  and volume tracking.
+  `distribute_creator_fees` paths, `collect_creator_fee_v2`, `admin_cto`,
+  creator changes for legacy SPL Token/Metaplex launches, and volume
+  tracking.
 - Migration after completion, an SBF binary, compute-unit limits or a
   deployed program.

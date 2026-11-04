@@ -318,3 +318,187 @@ async fn late_recipient_substitution_rolls_back_an_earlier_creator_claim() {
         "a late failed instruction must roll back an earlier valid payout",
     );
 }
+
+// ------------------------------------------------------ creator wallet authority
+//
+// Which paths can change a create_v2 token's creator wallet after launch, and
+// does an accrued balance stay claimable? These tests document current main;
+// the CTO path (`admin_cto`) fails closed by policy and is not exercised here.
+
+impl Bank {
+    /// Signed by the test payer plus `signers` only (no trader signature).
+    async fn send_with(&mut self, instruction: Instruction, signers: &[&solana_sdk::signature::Keypair]) -> Result<(), solana_program_test::BanksClientError> {
+        let blockhash = self.ctx.get_new_latest_blockhash().await.expect("fresh blockhash");
+        let mut all: Vec<&solana_sdk::signature::Keypair> = vec![&self.ctx.payer];
+        all.extend_from_slice(signers);
+        let tx = solana_sdk::transaction::Transaction::new_signed_with_payer(&[instruction], Some(&self.ctx.payer.pubkey()), &all, blockhash);
+        self.ctx.banks_client.process_transaction(tx).await
+    }
+
+    async fn set_global(&mut self, edit: impl FnOnce(&mut beam_program::Global)) {
+        use anchor_lang::{AccountDeserialize, AccountSerialize};
+        let mut account = self.ctx.banks_client.get_account(global_pda()).await.unwrap().unwrap();
+        let mut global = beam_program::Global::try_deserialize(&mut &account.data[..]).unwrap();
+        edit(&mut global);
+        let mut data = Vec::new();
+        global.try_serialize(&mut data).unwrap();
+        data.resize(account.data.len(), 0);
+        account.data = data;
+        self.ctx.set_account(&global_pda(), &account.into());
+    }
+
+    /// A synthetic inherited-fee-program sharing config for this mint.
+    fn set_sharing_config(&mut self, admin: Pubkey) -> Pubkey {
+        use anchor_lang::AccountSerialize;
+        use beam_program::pump_fees::{accounts::SharingConfig, types::ConfigStatus};
+        let mint = self.mint.pubkey();
+        let key = pda(&[b"sharing-config", mint.as_ref()], &FEE_PROGRAM);
+        let config = SharingConfig {
+            bump: 0, version: 1, status: ConfigStatus::Active, mint, admin,
+            admin_revoked: false, shareholders: vec![],
+        };
+        let mut data = Vec::new();
+        config.try_serialize(&mut data).unwrap();
+        self.ctx.set_account(&key, &owned(data, FEE_PROGRAM).into());
+        key
+    }
+
+    fn metaplex_metadata(&self) -> Pubkey {
+        let metaplex = anchor_spl::metadata::ID;
+        let mint = self.mint.pubkey();
+        pda(&[b"metadata", metaplex.as_ref(), mint.as_ref()], &metaplex)
+    }
+
+    fn set_creator(&self, authority: Pubkey, creator: Pubkey) -> Instruction {
+        let mint = self.mint.pubkey();
+        Instruction {
+            program_id: beam_program::ID,
+            accounts: beam_program::accounts::SetCreator {
+                set_creator_authority: authority, global: global_pda(), mint,
+                metadata: self.metaplex_metadata(), bonding_curve: curve_pda(&mint),
+                event_authority: event_authority(), program: beam_program::ID,
+            }.to_account_metas(None),
+            data: beam_program::instruction::SetCreator { creator }.data(),
+        }
+    }
+
+    fn set_metaplex_creator(&self) -> Instruction {
+        let mint = self.mint.pubkey();
+        Instruction {
+            program_id: beam_program::ID,
+            accounts: beam_program::accounts::SetMetaplexCreator {
+                mint, metadata: self.metaplex_metadata(), bonding_curve: curve_pda(&mint),
+                event_authority: event_authority(), program: beam_program::ID,
+            }.to_account_metas(None),
+            data: beam_program::instruction::SetMetaplexCreator {}.data(),
+        }
+    }
+
+    fn migrate_creator(&self) -> Instruction {
+        let mint = self.mint.pubkey();
+        Instruction {
+            program_id: beam_program::ID,
+            accounts: beam_program::accounts::MigrateBondingCurveCreator {
+                mint, bonding_curve: curve_pda(&mint),
+                sharing_config: pda(&[b"sharing-config", mint.as_ref()], &FEE_PROGRAM),
+                event_authority: event_authority(), program: beam_program::ID,
+            }.to_account_metas(None),
+            data: beam_program::instruction::MigrateBondingCurveCreator {}.data(),
+        }
+    }
+}
+
+fn anchor_code(error: anchor_lang::error::ErrorCode) -> u32 { error.into() }
+
+/// `set_creator` and `set_metaplex_creator` take an SPL Token `Mint` and a
+/// Metaplex metadata account, so neither applies to a Token-2022 create_v2
+/// launch: even the configured `set_creator_authority` cannot rewrite its
+/// creator wallet through them.
+#[tokio::test]
+async fn create_v2_creator_cannot_be_rewritten_by_set_creator_paths() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    let original = b.curve().await.creator;
+    assert_eq!(original, b.creator);
+
+    let authority = solana_sdk::signature::Keypair::new();
+    let authority_key = authority.pubkey();
+    b.set_global(|g| g.set_creator_authority = authority_key).await;
+    let stranger = b.stranger;
+
+    // The configured authority, signing, still cannot use the SPL-only path.
+    let ix = b.set_creator(authority_key, stranger);
+    assert_eq!(custom_error(b.send_with(ix, &[&authority]).await), anchor_code(anchor_lang::error::ErrorCode::AccountOwnedByWrongProgram),
+        "the Token-2022 mint is rejected by the SPL Token Mint account type");
+    // Anchor loads every account before it checks `has_one`, so any other
+    // signer is rejected by the same Mint account type: the path is
+    // structurally unavailable for create_v2 launches, whoever calls it.
+    let impostor = solana_sdk::signature::Keypair::new();
+    let ix = b.set_creator(impostor.pubkey(), stranger);
+    assert_eq!(custom_error(b.send_with(ix, &[&impostor]).await), anchor_code(anchor_lang::error::ErrorCode::AccountOwnedByWrongProgram));
+    let ix = b.set_metaplex_creator();
+    assert_eq!(custom_error(b.send_with(ix, &[]).await), anchor_code(anchor_lang::error::ErrorCode::AccountOwnedByWrongProgram));
+    assert_eq!(b.curve().await.creator, original, "the creator wallet is unchanged");
+}
+
+/// `migrate_bonding_curve_creator` needs no signature, but only moves the
+/// creator to an inherited-fee-program sharing config whose admin is the
+/// current creator. Fees accrued before the move stay claimable by the old
+/// wallet; later fees accrue to the sharing config's own vault, which
+/// `collect_creator_fee` refuses (that path belongs to the fee program).
+#[tokio::test]
+async fn creator_moves_only_to_a_sharing_config_the_creator_administers() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    b.send(&[b.buy(35_000_000_000_000, u64::MAX, false)], &[]).await.expect("buy");
+    let (creator, stranger, fee_recipient) = (b.creator, b.stranger, b.fee_recipient);
+    let old_vault = creator_vault(&creator);
+    let accrued = b.lamports(old_vault).await - Rent::default().minimum_balance(0);
+    assert!(accrued > 0);
+
+    assert_eq!(custom_error(b.send_with(b.migrate_creator(), &[]).await), anchor_code(anchor_lang::error::ErrorCode::AccountNotInitialized),
+        "no sharing config, no move");
+    b.set_sharing_config(stranger);
+    assert_eq!(custom_error(b.send_with(b.migrate_creator(), &[]).await), code(PumpError::BondingCurveAndSharingConfigCreatorMismatch),
+        "a config administered by someone else cannot capture the creator");
+    assert_eq!(b.curve().await.creator, creator);
+
+    let config = b.set_sharing_config(creator);
+    b.send_with(b.migrate_creator(), &[]).await.expect("creator-administered config");
+    assert_eq!(b.curve().await.creator, config, "the curve now pays the sharing config");
+
+    // Fees accrued before the move remain claimable by the old wallet.
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("old vault claim");
+    assert_eq!(b.lamports(creator).await, accrued);
+
+    // Later creator fees accrue to the sharing config's vault, not the old one.
+    let seeds: u32 = anchor_code(anchor_lang::error::ErrorCode::ConstraintSeeds);
+    assert_eq!(custom_error(b.send(&[b.buy(1_000_000_000_000, u64::MAX, false)], &[]).await), seeds,
+        "the old vault no longer matches the curve's creator");
+    let new_vault = creator_vault(&config);
+    b.send(&[b.buy_with(1_000_000_000_000, u64::MAX, false, fee_recipient, config, true)], &[]).await.expect("buy after move");
+    assert!(b.lamports(new_vault).await > Rent::default().minimum_balance(0));
+    assert_eq!(b.lamports(old_vault).await, Rent::default().minimum_balance(0), "nothing more reaches the old vault");
+    assert_eq!(custom_error(b.send_as_third_party(b.collect_creator_fee(config, config)).await),
+        code(PumpError::UnableToDistributeCreatorVaultMigratedToSharingConfig));
+}
+
+/// Completing the curve does not lock the creator vault: the accrued balance
+/// is still paid to the creator-selected wallet. (Beam's AMM v4 migration is
+/// not active on main, so this covers completion, not post-migration custody.)
+#[tokio::test]
+async fn creator_balance_stays_claimable_after_the_curve_completes() {
+    let mut b = bank().await;
+    let mint = b.mint.insecure_clone();
+    b.send(&[b.create_v2(), b.create_user_ata()], &[&mint]).await.expect("create_v2");
+    b.send(&[b.buy(INITIAL_REAL_TOKENS + 1, u64::MAX, true)], &[]).await.expect("completing buy");
+    assert!(b.curve().await.complete);
+    let creator = b.creator;
+    let accrued = b.lamports(creator_vault(&creator)).await - Rent::default().minimum_balance(0);
+    assert!(accrued > 0);
+    b.send_as_third_party(b.collect_creator_fee(creator, creator)).await.expect("claim after completion");
+    assert_eq!(b.lamports(creator).await, accrued);
+    assert_eq!(b.lamports(creator_vault(&creator)).await, Rent::default().minimum_balance(0));
+}
