@@ -1,0 +1,8 @@
+{"provenance":"observed execution of create_v2 in tests/legacy-trade-runtime (native processor, default Rent, 5000 lamports per signature)","cases":[
+{"nameBytes":12,"symbolBytes":3,"uriBytes":32,"mintDataLength":365,"mintLamports":3431280,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":7551600}
+,{"nameBytes":1,"symbolBytes":1,"uriBytes":0,"mintDataLength":320,"mintLamports":3118080,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":7238400}
+,{"nameBytes":32,"symbolBytes":13,"uriBytes":66,"mintDataLength":429,"mintLamports":3876720,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":7997040}
+,{"nameBytes":9,"symbolBytes":2,"uriBytes":11,"mintDataLength":340,"mintLamports":3257280,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":7377600}
+,{"nameBytes":1,"symbolBytes":2,"uriBytes":24,"mintDataLength":345,"mintLamports":3292080,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":7412400}
+,{"nameBytes":10,"symbolBytes":6,"uriBytes":129,"mintDataLength":463,"mintLamports":4113360,"curveLamports":2046240,"curveTokenAccountLamports":2074080,"creatorDebitLamports":8233680}
+]}

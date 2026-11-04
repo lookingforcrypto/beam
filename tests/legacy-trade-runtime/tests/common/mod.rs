@@ -155,6 +155,11 @@ impl Bank {
     }
 
     pub fn create_v2(&self) -> Instruction {
+        self.create_v2_with("Beam Runtime", "BRT", "https://example.invalid/brt.json")
+    }
+
+    /// `create_v2` with chosen metadata; the creator and accounts are as above.
+    pub fn create_v2_with(&self, name: &str, symbol: &str, uri: &str) -> Instruction {
         let mint = self.mint.pubkey();
         let curve = curve_pda(&mint);
         let accounts = beam_program::accounts::CreateV2 {
@@ -170,7 +175,7 @@ impl Bank {
             program_id: beam_program::ID,
             accounts: accounts.to_account_metas(None),
             data: beam_program::instruction::CreateV2 {
-                name: "Beam Runtime".into(), symbol: "BRT".into(), uri: "https://example.invalid/brt.json".into(),
+                name: name.into(), symbol: symbol.into(), uri: uri.into(),
                 creator: self.creator, is_mayhem_mode: false, is_cashback_enabled: OptionBool(false),
                 creator_fee_bps: CreationOptionU64(0), is_holder_reward: OptionBool(false),
             }.data(),

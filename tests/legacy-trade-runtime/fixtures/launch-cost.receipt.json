@@ -1,0 +1,12 @@
+{
+  "kind": "Observed execution of create_v2 by the beam-program handler in a local bank (native processor, default Rent, 5000 lamports per signature)",
+  "programSourceCommit": "5b0866c",
+  "producerPath": "tests/legacy-trade-runtime/tests/launch_cost.rs",
+  "producerSha256": "02fb5a6158c639ef4408e86bcd21ffb5e3015b88d977fabd07a992aac7f0c1eb",
+  "stdoutPath": "tests/legacy-trade-runtime/fixtures/launch-cost.json",
+  "stdoutSha256": "996e99d9c283c28658cc5d60f521caa9ee32314bb3f3ef41cb88c552878dbf36",
+  "stdoutBytes": 1248,
+  "reproducedIdentically": true,
+  "noNetworkOrWalletOrLiveFunds": true,
+  "command": "cd tests/legacy-trade-runtime && cargo test --locked --test launch_cost -- --ignored --nocapture | sed -n 's/^@@//p'"
+}

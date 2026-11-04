@@ -117,6 +117,23 @@ differ.
      `UnableToDistributeCreatorVaultMigratedToSharingConfig`, and the vault
      is left untouched.
 
+9. **Launch cost (`tests/launch_cost.rs`).** For six metadata shapes, `create_v2`
+   charges the creator exactly the rent-exempt minimum of the three accounts
+   it creates, and nothing else. The shapes cover one-byte names, the 32/13
+   byte limits, a 129-byte URI, and multi-byte UTF-8.
+   - The Token-2022 mint (metadata pointer plus on-mint metadata) is
+     `318 + name + symbol + uri` UTF-8 bytes.
+   - The bonding curve is 166 bytes.
+   - The curve token account is 170 bytes.
+   - The separate test payer pays only 5,000 lamports per signature.
+
+   The ignored producer writes `fixtures/launch-cost.json`. The web preview's
+   launch-cost estimate is tested against it:
+
+   ```sh
+   cargo test --locked --test launch_cost -- --ignored --nocapture | sed -n 's/^@@//p'
+   ```
+
 ## Remaining accounts
 
 Legacy `buy` and `sell` read `remaining_accounts[0]` as the
