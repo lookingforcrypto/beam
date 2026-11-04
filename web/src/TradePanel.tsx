@@ -234,9 +234,9 @@ export function TradePanel({ token }: { token: Token }) {
         </p>
         {summary.complete ? (
           <p>
-            This sample curve is complete. Beam's selected path migrates its
-            liquidity to Raydium AMM v4 and burns the LP Beam receives. That
-            migration is not active in this preview.
+            This sample curve is complete. Beam's selected, not-yet-merged path
+            migrates its liquidity to Raydium AMM v4 and burns the LP Beam
+            receives. That migration is not active in this preview.
           </p>
         ) : (
           <p>
@@ -244,9 +244,9 @@ export function TradePanel({ token }: { token: Token }) {
             still available for sale in the bonding curve, and{" "}
             {formatSol(summary.solInCurve)} in it. Buying the rest takes about{" "}
             {formatSol(summary.solToComplete)} plus fees. When the curve sells
-            out, Beam's selected path migrates its liquidity to Raydium AMM v4
-            and burns the LP Beam receives. That migration is not active in this
-            preview.
+            out, Beam's selected, not-yet-merged path migrates its liquidity to
+            Raydium AMM v4 and burns the LP Beam receives. That migration is not
+            active in this preview.
           </p>
         )}
         <p className="trade-config-note">

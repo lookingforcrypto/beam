@@ -31,7 +31,8 @@ The website and backend contribution lanes are in [the task ledger](../docs/TASK
 A non-draft token's detail view shows a pre-PumpSwap style trade ticket. It
 has Buy/Sell tabs, quick amounts and max slippage, and a bonding-curve
 summary: tokens still for sale, SOL in the curve, the cost to finish, and the
-selected Raydium AMM v4 graduation with LP burn.
+selected Raydium AMM v4 graduation with LP burn, described as selected but
+not yet merged policy.
 
 - **Numbers.** `src/tradePreview.ts` computes every number locally. Curve math
   comes from `../sdk/beam-quote.mjs` and the owner-selected 0.50% Beam
