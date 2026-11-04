@@ -31,6 +31,7 @@ import {
   Zap,
 } from "lucide-react";
 import { sampleTokens, type Token } from "./data";
+import { LaunchCostEstimate } from "./LaunchCostEstimate";
 import { dataLabel, sampleState } from "./indexerAdapter";
 import {
   getBrowserStorage,
@@ -1092,6 +1093,11 @@ function App() {
                     CreateV2 limits: name 32, symbol 13, metadata URI 200 UTF-8
                     bytes. This form validates those byte limits locally.
                   </p>
+                  <LaunchCostEstimate
+                    name={name.trim()}
+                    symbol={symbol.trim()}
+                    uri={metadataUri.trim()}
+                  />
                   {formError && (
                     <p className="form-error" role="alert">
                       {formError}
